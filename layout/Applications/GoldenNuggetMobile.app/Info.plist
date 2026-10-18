@@ -3,7 +3,11 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
-	<string>en</string>
+	<string>zh-Hans</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>zh-Hans</string>
+	</array>
 	<key>CFBundleDisplayName</key>
 	<string>GoldenNugget</string>
 	<key>CFBundleExecutable</key>
@@ -54,7 +58,7 @@
 		<string>_remotepairing-pairable-host._tcp.</string>
 	</array>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>GoldenNugget publishes an iOS 27 wireless pairing service on the local network so this iPhone can pair with itself and generate its own pairing file without a computer.</string>
+	<string>GoldenNugget 会在本地网络上发布 iOS 27 无线配对服务，让这台 iPhone 可以与自己配对并生成自己的配对文件，无需借助电脑。</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -105,7 +109,7 @@
 				<string>public.data</string>
 			</array>
 			<key>UTTypeDescription</key>
-			<string>Mobile Device Pairing File</string>
+			<string>移动设备配对文件</string>
 			<key>UTTypeIconFiles</key>
 			<array/>
 			<key>UTTypeIdentifier</key>

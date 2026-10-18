@@ -1,0 +1,157 @@
+name: Build & Release IPA (中文版)
+
+# CI 编译 + 发布：
+#   * workflow_dispatch：手动触发。release_tag 留空时只编译并上传 IPA artifact；
+#     填写 release_tag（例如 v9.6.0-zh.1）时编译并创建/更新 GitHub Release，
+#     同时上传未签名 IPA 与 SHA-256 校验文件。
+#   * push tag v*：推送 tag 时自动发布（如果仓库的 fork Actions 允许 push 触发）。
+#
+# 构建步骤与 .github/workflows/build.yml 保持一致：XcodeGen 2.46 生成工程，
+# 再由 scripts/build-ipa.sh Release 驱动 xcodebuild 并打包 build/GoldenNuggetMobile.ipa。
+# 该 IPA 是未签名的，侧载工具（AltStore / SideStore / LiveContainer 等）负责签名。
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "要创建的 Release tag（例如 v9.6.0-zh.1）；留空则只编译、不发布"
+        required: false
+        default: ""
+      release_name:
+        description: "Release 标题（留空使用默认中文标题）"
+        required: false
+        default: ""
+      prerelease:
+        description: "标记为预发布（Pre-release）"
+        type: boolean
+        default: false
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-release:
+    name: Build unsigned IPA and publish release
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+
+      - name: Show toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+
+      - name: Install XcodeGen
+        # 固定到 project.yml 写死的版本（2.46.0），避免 runner 镜像升级悄悄换掉工程生成结果。
+        env:
+          XCODEGEN_VERSION: 2.46.0
+        run: |
+          set -euo pipefail
+          DEST="$RUNNER_TEMP/xcodegen"
+          rm -rf "$DEST"
+          mkdir -p "$DEST"
+          curl -fsSL -o "$RUNNER_TEMP/xcodegen.zip" \
+            "https://github.com/yonaskolb/XcodeGen/releases/download/$XCODEGEN_VERSION/xcodegen.zip"
+          unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$DEST"
+          echo "$DEST/xcodegen/bin" >> "$GITHUB_PATH"
+
+      - name: Generate the Xcode project
+        # GoldenNuggetMobile.xcodeproj 是 project.yml 的构建产物（已 gitignore），
+        # CI 必须先重新生成，postGenCommand 会同步 SwiftPM 解析出的 Sources 列表。
+        run: |
+          xcodegen --version
+          xcodegen generate
+
+      - name: Build IPA
+        run: ./scripts/build-ipa.sh Release
+
+      - name: Checksum
+        run: |
+          set -euo pipefail
+          cd build
+          shasum -a 256 GoldenNuggetMobile.ipa | tee GoldenNuggetMobile.ipa.sha256
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: GoldenNuggetMobile-zh
+          path: |
+            build/GoldenNuggetMobile.ipa
+            build/GoldenNuggetMobile.ipa.sha256
+          if-no-files-found: error
+
+      - name: Resolve release tag
+        id: tag
+        env:
+          INPUT_TAG: ${{ github.event.inputs.release_tag }}
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "push" ]; then
+            tag="${GITHUB_REF_NAME}"
+          else
+            tag="${INPUT_TAG:-}"
+          fi
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+          echo "resolved release tag: ${tag:-<build only>}"
+
+      - name: Publish GitHub Release
+        if: steps.tag.outputs.tag != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.tag.outputs.tag }}
+          RELEASE_NAME: ${{ github.event.inputs.release_name }}
+          PRERELEASE: ${{ github.event.inputs.prerelease }}
+        run: |
+          set -euo pipefail
+          title="${RELEASE_NAME:-GoldenNugget Mobile 简体中文版 ${TAG}}"
+          version="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' layout/Applications/GoldenNuggetMobile.app/Info.plist)"
+          build="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' layout/Applications/GoldenNuggetMobile.app/Info.plist)"
+          sha="$(cat build/GoldenNuggetMobile.ipa.sha256)"
+          notes="$(mktemp)"
+          {
+            echo "GoldenNugget Mobile 简体中文版（版本 ${version}，构建号 ${build}）"
+            echo
+            echo "本版本由 GitHub Actions 的 macOS runner 通过 Xcode/XcodeGen 编译，产物为 **未签名 IPA**，"
+            echo "请使用 AltStore、SideStore、LiveContainer 等工具侧载安装（安装时由工具签名）。"
+            echo
+            echo "## 本版内容"
+            echo
+            echo "- 界面全面简体中文化：主页、调整项、守护进程、状态栏、海报板、文件、预设、设置等"
+            echo "- 内置调整项名称/说明、守护进程分组与说明已翻译"
+            echo "- 运行日志、备份/恢复、配对与错误提示中文化"
+            echo "- 应用元数据（本地网络权限说明、文件类型描述）中文化"
+            echo
+            echo "## 安装包"
+            echo
+            echo "- \`GoldenNuggetMobile.ipa\`（未签名，Release 构建）"
+            echo "- \`GoldenNuggetMobile.ipa.sha256\`（SHA-256 校验文件）"
+            echo
+            echo "\`\`\`"
+            echo "${sha}"
+            echo "\`\`\`"
+            echo
+            echo "> 使用前请先备份设备数据。本项目不对设备损坏或数据丢失负责。"
+          } > "$notes"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" build/GoldenNuggetMobile.ipa build/GoldenNuggetMobile.ipa.sha256 --clobber
+          else
+            args=(release create "$TAG"
+                  build/GoldenNuggetMobile.ipa
+                  build/GoldenNuggetMobile.ipa.sha256
+                  --title "$title"
+                  --notes-file "$notes")
+            if [ "${PRERELEASE:-false}" = "true" ]; then
+              args+=(--prerelease)
+            fi
+            gh "${args[@]}"
+          fi
+          echo "release: $(gh release view "$TAG" --json url --jq .url)"
