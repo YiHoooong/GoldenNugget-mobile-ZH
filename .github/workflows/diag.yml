@@ -1,0 +1,39 @@
+name: Diagnose toolchain
+
+on:
+  workflow_dispatch:
+
+jobs:
+  diag:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Toolchains
+        run: |
+          set -x
+          sw_vers
+          xcodebuild -version
+          xcode-select -p
+          ls -1 /Applications | grep -i Xcode || true
+          for x in /Applications/Xcode*.app; do
+            [ -d "$x" ] || continue
+            echo "== $x"
+            /usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$x/Contents/Info.plist" 2>/dev/null || true
+            "$x/Contents/Developer/usr/bin/actool" --version 2>&1 | head -3 || true
+          done
+          xcrun --sdk iphoneos --show-sdk-version
+      - name: Try actool on the catalog
+        run: |
+          set -x
+          CATALOG="$PWD/layout/Applications/GoldenNuggetMobile.app/Assets.xcassets"
+          ICON="$CATALOG/AppIcon.icon"
+          mkdir -p /tmp/actool-out
+          /Applications/Xcode.app/Contents/Developer/usr/bin/actool "$ICON" "$CATALOG" \
+            --compile /tmp/actool-out --output-format human-readable-text --notices --warnings \
+            --app-icon AppIcon --include-all-app-icons --target-device iphone --target-device ipad \
+            --minimum-deployment-target 26.0 --platform iphoneos \
+            --bundle-identifier com.awesomenull.goldennugget 2>&1 | tail -40 || true
+      - name: Icon document files
+        run: |
+          find layout/Applications/GoldenNuggetMobile.app/Assets.xcassets/AppIcon.icon -type f -maxdepth 3 -exec ls -la {} \;
+          head -80 layout/Applications/GoldenNuggetMobile.app/Assets.xcassets/AppIcon.icon/icon.json
