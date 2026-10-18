@@ -38,7 +38,7 @@ final class FirstRunSettings: ObservableObject {
         let wasComplete = completed
         completed = true
         GoldenNuggetEngine.shared.log(wasComplete
-            ? "setup guide re-opened and closed again (\(reason))"
-            : "setup guide finished (\(reason))")
+            ? "初始设置指南重新打开后又关闭了（\(reason)）"
+            : "初始设置指南已完成（\(reason)）")
     }
 }

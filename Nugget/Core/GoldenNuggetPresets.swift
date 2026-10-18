@@ -244,9 +244,9 @@ enum GoldenNuggetPresets {
     static func importPreset(from url: URL, newName: String?) -> (Bool, String) {
         guard let data = try? Data(contentsOf: url),
               let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
-        else { return (false, "Cannot read the file as JSON.") }
+        else { return (false, "无法将该文件读取为 JSON。") }
         guard isValidImport(root) else {
-            return (false, "Invalid preset file. Expected a tweak dictionary and valid preset metadata.")
+            return (false, "预设文件无效。应包含调整项字典和有效的预设元数据。")
         }
 
         var base = newName

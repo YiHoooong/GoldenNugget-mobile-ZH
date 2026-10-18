@@ -24,7 +24,7 @@ struct LegacyConvertPromptModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         content.alert(
-            "Legacy Wallpaper Format",
+            "旧版墙纸格式",
             isPresented: Binding(
                 get: { prompt != nil },
                 set: { if !$0 { dismiss() } }),

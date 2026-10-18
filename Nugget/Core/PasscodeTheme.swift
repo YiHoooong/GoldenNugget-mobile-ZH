@@ -47,23 +47,23 @@ enum PasscodeLanguageTarget: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .all: return "All languages"
-        case .uk: return "Ukrainian"
-        case .ru: return "Russian"
-        case .en: return "English"
-        case .other: return "Other / fallback"
-        case .es: return "Spanish"
-        case .de: return "German"
-        case .fr: return "French"
-        case .pl: return "Polish"
-        case .it: return "Italian"
-        case .pt: return "Portuguese"
-        case .tr: return "Turkish"
-        case .ja: return "Japanese"
-        case .ko: return "Korean"
-        case .zh: return "Chinese"
-        case .ar: return "Arabic"
-        case .he: return "Hebrew"
+        case .all: return "所有语言"
+        case .uk: return "乌克兰语"
+        case .ru: return "俄语"
+        case .en: return "英语"
+        case .other: return "其他 / 回退"
+        case .es: return "西班牙语"
+        case .de: return "德语"
+        case .fr: return "法语"
+        case .pl: return "波兰语"
+        case .it: return "意大利语"
+        case .pt: return "葡萄牙语"
+        case .tr: return "土耳其语"
+        case .ja: return "日语"
+        case .ko: return "韩语"
+        case .zh: return "中文"
+        case .ar: return "阿拉伯语"
+        case .he: return "希伯来语"
         }
     }
 
@@ -98,9 +98,9 @@ enum PasscodeBoldTarget: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .both: return "Regular + bold"
-        case .boldOnly: return "Bold only"
-        case .regularOnly: return "Regular only"
+        case .both: return "常规 + 粗体"
+        case .boldOnly: return "仅粗体"
+        case .regularOnly: return "仅常规"
         }
     }
 
@@ -192,7 +192,7 @@ enum PasscodeThemeReader {
 
         let files = (FileManager.default.subpaths(atPath: stage.path) ?? [])
         guard !files.isEmpty else {
-            throw GoldenNuggetError("\(url.lastPathComponent) unpacked to nothing.")
+            throw GoldenNuggetError("\(url.lastPathComponent) 解包后为空。")
         }
 
         var previews: [String: UIImage] = [:]
@@ -214,7 +214,7 @@ enum PasscodeThemeReader {
         }
 
         guard !previews.isEmpty else {
-            throw GoldenNuggetError("\(url.lastPathComponent) has no keypad images in it.")
+            throw GoldenNuggetError("\(url.lastPathComponent) 中没有键盘图片。")
         }
         return PasscodeThemeInfo(name: url.lastPathComponent,
                                  filePath: url.path,
@@ -297,14 +297,14 @@ enum PasscodeThemeEngine {
                       log: @escaping (String) -> Void,
                       progress: @escaping (Double) -> Void) async throws {
         guard !theme.rawKeyData.isEmpty else {
-            throw GoldenNuggetError("\(theme.name) has no key images in it.")
+            throw GoldenNuggetError("\(theme.name) 中没有按键图片。")
         }
         let stage = try stage(theme: theme, language: language, weight: weight)
 
         let suffixes = weight.suffixes
         let languages = languages(for: language)
-        log("\(theme.name): \(theme.rawKeyData.count) key(s) × \(languages.count) locale(s) × "
-            + "\(suffixes.count) weight(s)")
+        log("\(theme.name)：\(theme.rawKeyData.count) 个按键 × \(languages.count) 个语言区域 × "
+            + "\(suffixes.count) 种字重")
 
         let roots = telephonyCacheRoots
         for (index, root) in roots.enumerated() {
@@ -323,7 +323,7 @@ enum PasscodeThemeEngine {
         }
 
         try? FileManager.default.removeItem(at: stage)
-        log("Lock the device to see the keypad.")
+        log("锁定设备即可看到键盘效果。")
     }
 
     /// Build the on-disk matrix a theme turns into.

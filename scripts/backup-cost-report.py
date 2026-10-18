@@ -43,7 +43,7 @@ AFC_RE = re.compile(r"AFC media: (?P<files>\d+) file\(s\)(?:, (?P<size>.+?))?$")
 AFC_SKIP_RE = re.compile(r"AFC media: (?P<files>\d+) file\(s\) already stored, "
                          r"(?P<bytes>\d+) byte\(s\) not transferred")
 RESTORE_RE = re.compile(r"restore verified: the device reported (?P<pct>\d+)%")
-RETRY_RE = re.compile(r"attempt (?P<n>\d+)/(?P<of>\d+) ")
+RETRY_RE = re.compile(r"(?:attempt |第 )(?P<n>\d+)/(?P<of>\d+) ")
 BASELINE_RE = re.compile(r"baseline: (?P<what>.*)")
 RUN_RE = re.compile(r"⏱ RUN (?P<what>.+?): ")
 

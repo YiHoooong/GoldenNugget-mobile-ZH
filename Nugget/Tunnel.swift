@@ -97,10 +97,10 @@ enum Tunnel {
         var line: String? {
             guard !isEmpty else { return nil }
             var parts: [String] = []
-            if let ifaceIP { parts.append("iface \(ifaceIP)\(ifaceSubnetMask.map { "/\($0)" } ?? "")") }
-            if let peerIP { parts.append("peer \(peerIP)\(peerSubnetMask.map { "/\($0)" } ?? "")") }
-            if let peerReachable { parts.append("peer reachable=\(peerReachable)") }
-            return "tunnel as resolved by the connection manager: " + parts.joined(separator: ", ")
+            if let ifaceIP { parts.append("接口 \(ifaceIP)\(ifaceSubnetMask.map { "/\($0)" } ?? "")") }
+            if let peerIP { parts.append("对端 \(peerIP)\(peerSubnetMask.map { "/\($0)" } ?? "")") }
+            if let peerReachable { parts.append("对端可达=\(peerReachable)") }
+            return "连接管理器解析出的隧道：" + parts.joined(separator: ", ")
         }
     }
 
@@ -158,9 +158,9 @@ enum Tunnel {
     /// error it produces ("only allows a prefix length from 0 to 32") does not
     /// name the field.
     static var requirements: String {
-        var line = "LocalDevVPN: tunnel IP \(ifaceIP)/\(ifacePrefixLength), "
-            + "peer \(peerIP), port \(servicePort)"
-        if isCustomised { line += " (custom)" }
+        var line = "LocalDevVPN：隧道 IP \(ifaceIP)/\(ifacePrefixLength)，"
+            + "对端 \(peerIP)，端口 \(servicePort)"
+        if isCustomised { line += "（已自定义）" }
         return line
     }
 
@@ -199,33 +199,33 @@ enum Tunnel {
             polls += 1
             guard elapsed >= nextLogAt else { return }
             nextLogAt = elapsed + logEvery
-            log("tunnel: waiting for \(what)… (\(polls) poll(s), \(Int(elapsed))s of \(Int(timeout))s)")
+            log("隧道：正在等待 \(what)…（已轮询 \(polls) 次，\(Int(elapsed))s / \(Int(timeout))s）")
         }
 
         let phase1Start = Date()
         while Date().timeIntervalSince(phase1Start) < timeout {
             if isInterfaceUp() { break }
-            waiting("iface \(ifaceIP) to come up", Date().timeIntervalSince(phase1Start))
+            waiting("接口 \(ifaceIP) 就绪", Date().timeIntervalSince(phase1Start))
             usleep(500_000)
         }
         guard isInterfaceUp() else {
-            log("tunnel: FAILED — iface \(ifaceIP) never appeared within \(Int(timeout))s "
-                + "after \(polls) poll(s). \(requirements).")
+            log("隧道：失败 — 接口 \(ifaceIP) 在 \(Int(timeout))s 内始终未出现"
+                + "（已轮询 \(polls) 次）。\(requirements)。")
             return false
         }
-        log("tunnel: iface \(ifaceIP) up, probing \(peerIP):\(servicePort)…")
+        log("隧道：接口 \(ifaceIP) 已就绪，正在探测 \(peerIP):\(servicePort)…")
 
         polls = 0
         nextLogAt = 0
         let phase2Start = Date()
         while Date().timeIntervalSince(phase2Start) < timeout {
             if probePeer(timeout: 2.0) { return true }
-            waiting("\(peerIP):\(servicePort) to accept a connection", Date().timeIntervalSince(phase2Start))
+            waiting("\(peerIP):\(servicePort) 接受连接", Date().timeIntervalSince(phase2Start))
             usleep(500_000)
         }
-        log("tunnel: FAILED — \(peerIP):\(servicePort) did not answer within \(Int(timeout))s "
-            + "after \(polls) poll(s). The interface is up, so the VPN is connected but nothing "
-            + "is serving lockdown on the peer port.")
+        log("隧道：失败 — \(peerIP):\(servicePort) 在 \(Int(timeout))s 内没有应答"
+            + "（已轮询 \(polls) 次）。接口已就绪，说明 VPN 已连接，"
+            + "但对端端口上没有 lockdown 服务。")
         return false
     }
 

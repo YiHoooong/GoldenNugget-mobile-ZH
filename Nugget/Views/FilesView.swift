@@ -66,9 +66,9 @@ struct FilesView: View {
 
         var title: String {
             switch self {
-            case .name: "Name"
-            case .size: "Size"
-            case .date: "Date"
+            case .name: "名称"
+            case .size: "大小"
+            case .date: "日期"
             }
         }
 
@@ -91,13 +91,13 @@ struct FilesView: View {
                 // The system's own empty state, so an empty directory looks like
                 // an empty directory in every other app on the phone.
                 ContentUnavailableView {
-                    Label("Folder is Empty", systemImage: "folder")
+                    Label("文件夹为空", systemImage: "folder")
                 } description: {
                     Text(path.isEmpty
-                         ? "The device's AFC service published nothing here."
-                         : "\(path[path.count - 1]) has nothing in it.")
+                         ? "设备的 AFC 服务在此处没有发布任何内容。"
+                         : "\(path[path.count - 1]) 中没有任何内容。")
                 } actions: {
-                    Button("New Folder") { newFolderName = ""; showNewFolder = true }
+                    Button("新建文件夹") { newFolderName = ""; showNewFolder = true }
                         .buttonStyle(.borderedProminent)
                 }
                 .listRowSeparator(.hidden)
@@ -110,7 +110,7 @@ struct FilesView: View {
             if let pullProgress {
                 VStack(alignment: .leading, spacing: 4) {
                     ProgressView(value: pullProgress)
-                    Text("Pulling \(Int(pullProgress * 100))%")
+                    Text("正在拉取 \(Int(pullProgress * 100))%")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -124,9 +124,9 @@ struct FilesView: View {
             // The write cap, where a reader of the listing will find it rather
             // than where a failed upload finds them. It is the one limit on this
             // page that is not the device's, so it is stated as this app's.
-            Text("Uploads are capped at \(AfcFileExplorer.format(AfcFileExplorer.pushSizeLimit)) "
-                 + "— an AFC write is a single call with no streaming form, so a larger file "
-                 + "is refused rather than truncated.")
+            Text("上传上限为 \(AfcFileExplorer.format(AfcFileExplorer.pushSizeLimit))，"
+                 + "AFC 写入是单次调用，不支持流式传输，因此较大的文件"
+                 + "会被拒绝，而不是被截断。")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .listRowBackground(Color.clear)
@@ -145,7 +145,7 @@ struct FilesView: View {
         .overlay(alignment: .bottom) { bannerView }
         .animation(.easeInOut(duration: 0.18), value: banner)
         .refreshable { await load() }
-        .navigationTitle("Files")
+        .navigationTitle("文件")
         // Compact widths only -- on a tablet the split view draws its own sidebar
         // toggle, and a second button beside it is the duplicate-controls mess.
         .goldenSidebarButton()
@@ -157,13 +157,13 @@ struct FilesView: View {
                 // They were a card of three rows above the listing, which is a
                 // toolbar written out longhand.
                 Menu {
-                    Picker("Sort by", selection: $sortRaw) {
+                    Picker("排序方式", selection: $sortRaw) {
                         ForEach(SortOrder.allCases) { order in
                             Label(order.title, systemImage: order.systemImage).tag(order.rawValue)
                         }
                     }
                 } label: {
-                    Label("Sort", systemImage: "arrow.up.arrow.down")
+                    Label("排序", systemImage: "arrow.up.arrow.down")
                 }
 
                 Menu {
@@ -171,15 +171,15 @@ struct FilesView: View {
                         newFolderName = ""
                         showNewFolder = true
                     } label: {
-                        Label("New Folder", systemImage: "folder.badge.plus")
+                        Label("新建文件夹", systemImage: "folder.badge.plus")
                     }
                     Button {
                         showImporter = true
                     } label: {
-                        Label("Upload", systemImage: "square.and.arrow.up")
+                        Label("上传", systemImage: "square.and.arrow.up")
                     }
                 } label: {
-                    Label("Add", systemImage: "plus")
+                    Label("添加", systemImage: "plus")
                 }
                 .disabled(busy)
             }
@@ -195,29 +195,29 @@ struct FilesView: View {
             case .failure(let error): self.error = error.localizedDescription
             }
         }
-        .alert("New folder", isPresented: $showNewFolder) {
-            TextField("Name", text: $newFolderName)
-            Button("Create") { Task { await createFolder() } }
-            Button("Cancel", role: .cancel) { newFolderName = "" }
+        .alert("新建文件夹", isPresented: $showNewFolder) {
+            TextField("名称", text: $newFolderName)
+            Button("创建") { Task { await createFolder() } }
+            Button("取消", role: .cancel) { newFolderName = "" }
         }
-        .alert("Rename", isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })) {
-            TextField("Name", text: $renameText)
-            Button("Rename") { Task { await performRename() } }
-            Button("Cancel", role: .cancel) { renaming = nil; renameText = "" }
+        .alert("重命名", isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })) {
+            TextField("名称", text: $renameText)
+            Button("重命名") { Task { await performRename() } }
+            Button("取消", role: .cancel) { renaming = nil; renameText = "" }
         }
         .confirmationDialog(
-            deleting.map { "Delete \($0.name)?" } ?? "Delete?",
+            deleting.map { "删除 \($0.name)？" } ?? "删除？",
             isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }),
             titleVisibility: .visible
         ) {
-            Button("Delete", role: .destructive) { Task { await performDelete() } }
-            Button("Cancel", role: .cancel) { deleting = nil }
+            Button("删除", role: .destructive) { Task { await performDelete() } }
+            Button("取消", role: .cancel) { deleting = nil }
         } message: {
             if let deleting {
                 Text(deleting.isDirectory
-                     ? "A folder. Nothing goes through a trash here — this is the device's own delete."
-                     : "\(AfcFileExplorer.format(deleting.size)) on the device, removed with no trash "
-                        + "and no undo.")
+                     ? "这是一个文件夹。此操作不经过废纸篓——这是设备自身的删除操作。"
+                     : "设备上的 \(AfcFileExplorer.format(deleting.size))，删除后不进入废纸篓，"
+                        + "也无法撤销。")
             }
         }
     }
@@ -301,7 +301,7 @@ struct FilesView: View {
                         .foregroundStyle(.tint)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Up one level")
+                .accessibilityLabel("上一级")
                 .padding(.leading)
             }
 
@@ -425,18 +425,18 @@ struct FilesView: View {
             // gesture that destroys without a confirmation is exactly the thing
             // the delete dialog is here to prevent.
             Button(role: .destructive) { deleting = entry } label: {
-                Label("Delete", systemImage: "trash")
+                Label("删除", systemImage: "trash")
             }
         }
         .swipeActions(edge: .leading, allowsFullSwipe: false) {
             if entry.isDirectory {
                 Button { renaming = entry; renameText = entry.name } label: {
-                    Label("Rename", systemImage: "pencil")
+                    Label("重命名", systemImage: "pencil")
                 }
                 .tint(.gray)
             } else {
                 Button { Task { await pull(entry) } } label: {
-                    Label("Pull", systemImage: "arrow.down.to.line")
+                    Label("拉取", systemImage: "arrow.down.to.line")
                 }
                 .tint(.gray)
             }
@@ -444,18 +444,18 @@ struct FilesView: View {
         .contextMenu {
             if !entry.isDirectory {
                 Button { Task { await preview(entry) } } label: {
-                    Label("Quick Look", systemImage: "eye")
+                    Label("快速查看", systemImage: "eye")
                 }
                 Button { Task { await pull(entry) } } label: {
-                    Label("Pull to This Device", systemImage: "arrow.down.to.line")
+                    Label("拉取到本机", systemImage: "arrow.down.to.line")
                 }
                 Divider()
             }
             Button { renaming = entry; renameText = entry.name } label: {
-                Label("Rename", systemImage: "pencil")
+                Label("重命名", systemImage: "pencil")
             }
             Button(role: .destructive) { deleting = entry } label: {
-                Label("Delete", systemImage: "trash")
+                Label("删除", systemImage: "trash")
             }
         }
     }
@@ -465,8 +465,8 @@ struct FilesView: View {
     /// they are trying to tell two similarly named files apart — and the
     /// modification date was being read off the entry and thrown away.
     private func subtitle(for entry: AfcFsEntry) -> String {
-        if let link = entry.linkTarget { return "Symlink → \(link)" }
-        guard !entry.isDirectory else { return "Folder" }
+        if let link = entry.linkTarget { return "符号链接 → \(link)" }
+        guard !entry.isDirectory else { return "文件夹" }
         let size = AfcFileExplorer.format(entry.size)
         guard let modified = entry.modified else { return size }
         return "\(size) · \(Self.dateText(modified))"
@@ -490,8 +490,8 @@ struct FilesView: View {
             return f
         }()
         return { date in
-            if calendar.isDateInToday(date) { return "Today, \(time.string(from: date))" }
-            if calendar.isDateInYesterday(date) { return "Yesterday, \(time.string(from: date))" }
+            if calendar.isDateInToday(date) { return "今天 \(time.string(from: date))" }
+            if calendar.isDateInYesterday(date) { return "昨天 \(time.string(from: date))" }
             return day.string(from: date)
         }
     }()
@@ -500,7 +500,7 @@ struct FilesView: View {
         HStack(spacing: 8) {
             Image(systemName: "internaldrive")
                 .foregroundStyle(.secondary)
-            Text("\(AfcFileExplorer.format(volume.freeBytes)) free of "
+            Text("\(AfcFileExplorer.format(volume.freeBytes)) 可用，共 "
                  + "\(AfcFileExplorer.format(volume.totalBytes))")
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -570,7 +570,7 @@ struct FilesView: View {
             // read the previewer can seek in, which means a 40 MB video is 40 MB
             // over the wire and 40 MB in the temp directory before the first
             // frame. Hiding that behind a tap would be the surprise.
-            status = "Fetching \(entry.name) · \(AfcFileExplorer.format(entry.size)) to preview"
+            status = "正在获取 \(entry.name) · \(AfcFileExplorer.format(entry.size)) 以进行预览"
             let local = try await AfcFileExplorer.pullToTemporaryFile(entry) { fraction in
                 Task { @MainActor in pullProgress = fraction }
             }
@@ -590,7 +590,7 @@ struct FilesView: View {
             let local = try await AfcFileExplorer.pull(entry) { fraction in
                 Task { @MainActor in pullProgress = fraction }
             }
-            status = "Pulled \(entry.name) → \(local.lastPathComponent)"
+            status = "已拉取 \(entry.name) → \(local.lastPathComponent)"
             error = nil
         } catch {
             self.error = error.localizedDescription
@@ -604,7 +604,7 @@ struct FilesView: View {
         defer { if scoped { url.stopAccessingSecurityScopedResource() } }
         do {
             let entry = try await AfcFileExplorer.push(url, to: AfcFileExplorer.join(path))
-            status = "Uploaded \(entry.name)"
+            status = "已上传 \(entry.name)"
             error = nil
             await load()
         } catch {
@@ -649,7 +649,7 @@ struct FilesView: View {
         defer { busy = false }
         do {
             try await AfcFileExplorer.delete(entry)
-            status = "Deleted \(entry.name)"
+            status = "已删除 \(entry.name)"
             error = nil
             await load()
         } catch {

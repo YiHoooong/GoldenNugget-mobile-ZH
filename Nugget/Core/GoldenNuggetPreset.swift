@@ -47,13 +47,13 @@ struct GoldenNuggetPreset {
 
         /// One line for the log, in the reference's own vocabulary.
         var summary: String {
-            var parts = ["preset v\(version.map(String.init) ?? "?")"]
+            var parts = ["预设 v\(version.map(String.init) ?? "?")"]
             if !description.isEmpty { parts.append("\"\(description)\"") }
             if !iosVersion.isEmpty && iosVersion != "Unknown" { parts.append("iOS \(iosVersion)") }
             if !deviceModel.isEmpty && deviceModel != "Unknown" { parts.append(deviceModel) }
-            if exported { parts.append("exported") }
-            if partial { parts.append("partial (\(included.count) tweaks)") }
-            if !tags.isEmpty { parts.append("tags: \(tags.joined(separator: ","))") }
+            if exported { parts.append("已导出") }
+            if partial { parts.append("部分导出（\(included.count) 个调整项）") }
+            if !tags.isEmpty { parts.append("标签：\(tags.joined(separator: ","))") }
             return parts.joined(separator: ", ")
         }
     }
@@ -70,13 +70,13 @@ struct GoldenNuggetPreset {
         do {
             root = try JSONSerialization.jsonObject(with: data, options: [])
         } catch {
-            throw GoldenNuggetError("autosave.json: not valid JSON (\(error.localizedDescription))")
+            throw GoldenNuggetError("autosave.json：不是有效的 JSON（\(error.localizedDescription)）")
         }
         guard let object = root as? [String: Any] else {
-            throw GoldenNuggetError("autosave.json: top level is not a JSON object")
+            throw GoldenNuggetError("autosave.json：顶层不是 JSON 对象")
         }
         guard object["tweaks"] != nil || object["metadata"] != nil else {
-            throw GoldenNuggetError("autosave.json: no \"tweaks\" or \"metadata\" — not a GoldenNugget preset")
+            throw GoldenNuggetError("autosave.json：没有 \"tweaks\" 或 \"metadata\" —— 不是 GoldenNugget 预设")
         }
 
         return GoldenNuggetPreset(metadata: parseMetadata(object["metadata"]),
@@ -150,23 +150,23 @@ struct TweakImportReport {
     /// The block written into the run log.
     var logLines: [String] {
         var out: [String] = []
-        out.append("autosave.json import: \(metadataLine)")
-        out.append("  applied \(applied.count) tweak(s): \(applied.isEmpty ? "(none)" : applied.joined(separator: ", "))")
+        out.append("autosave.json 导入：\(metadataLine)")
+        out.append("  已应用 \(applied.count) 个调整项：\(applied.isEmpty ? "（无）" : applied.joined(separator: ", "))")
         let unsupported = skippedUnported.map { "\($0.id) — \($0.reason)" }
         if !unsupported.isEmpty {
-            out.append("  not part of this port (\(unsupported.count)): \(unsupported.joined(separator: "; "))")
+            out.append("  不属于此移植版（\(unsupported.count)）：\(unsupported.joined(separator: "; "))")
         }
         if !skippedIncompatible.isEmpty {
-            out.append("  switched off — not compatible with this device/OS: "
+            out.append("  已关闭 —— 与此设备/系统不兼容："
                 + skippedIncompatible.joined(separator: ", "))
         }
         if !skippedUnknown.isEmpty {
-            out.append("  unknown tweak ids (ignored, like the reference): "
+            out.append("  未知调整项 ID（已忽略，与原版一致）："
                 + skippedUnknown.joined(separator: ", "))
         }
         for item in ignoredPayload {
-            out.append("  note: \(item.id) carries \(item.keys.joined(separator: ", ")) — "
-                + "not representable here, ignored")
+            out.append("  注意：\(item.id) 带有 \(item.keys.joined(separator: ", ")) — "
+                + "此处无法表示，已忽略")
         }
         return out
     }
@@ -193,12 +193,12 @@ enum GoldenNuggetPresetImport {
     /// there is nothing in a preset to carry.  The feature *is* ported — it lives
     /// on the PosterBoard page, and the page is where a wallpaper is chosen.
     static let unported: [String: String] = [
-        "PosterBoard": "wallpapers — the reference excludes them from presets; "
-            + "use the PosterBoard page instead",
-        "Templates": "PosterBoard templates — needs the template asset store",
-        "StatusBar": "Status Bar — needs the StatusBarOverrideData struct over CFFI",
-        "IconThemes": "Icon Themes — needs the icon asset store",
-        "ClearScreenTimeAgentPlist": "daemons page — a NullifyFileTweak writing a 0-byte plist",
+        "PosterBoard": "墙纸 —— 原版将墙纸排除在预设之外；"
+            + "请改用海报板页面",
+        "Templates": "海报板模板 —— 需要模板资源库",
+        "StatusBar": "状态栏 —— 需要通过 CFFI 传递 StatusBarOverrideData 结构体",
+        "IconThemes": "图标主题 —— 需要图标资源库",
+        "ClearScreenTimeAgentPlist": "守护进程页面 —— 一个写出 0 字节 plist 的 NullifyFileTweak",
     ]
 
     /// Desktop presets carry daemons as one entry: `Daemons` with a `value` dict

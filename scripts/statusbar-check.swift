@@ -394,7 +394,7 @@ do {
     check(round.secondary.name == nil, "no secondary entry")
 
     let dropped = StatusBarArchive.droppedFields(archiveOverrides)
-    check(dropped.contains("time"), "the unsupported time override is reported as dropped")
+    check(dropped.contains("时间"), "the unsupported time override is reported as dropped")
 
     // Long carrier truncation.
     var longName = StatusBarOverrides()

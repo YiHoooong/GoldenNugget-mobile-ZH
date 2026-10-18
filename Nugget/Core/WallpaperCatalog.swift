@@ -53,7 +53,7 @@ enum WallpaperSource: String, CaseIterable, Identifiable, Sendable {
 
     var label: String {
         switch self {
-        case .all: "All"
+        case .all: "全部"
         case .cowabunga: "Cowabunga"
         case .caplayground: "CaPlayground"
         }
@@ -216,7 +216,7 @@ enum WallpaperCatalog {
         request.cachePolicy = .returnCacheDataElseLoad
         let (data, response) = try await session.data(for: request)
         if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
-            throw GoldenNuggetError("\(source.label) answered HTTP \(http.statusCode) for its catalog")
+            throw GoldenNuggetError("\(source.label) 的墙纸目录返回 HTTP \(http.statusCode)")
         }
         try? data.write(to: cacheURL, options: .atomic)
         return Load(wallpapers: try parse(data, source: source), failures: [], fromCache: false)
@@ -233,20 +233,20 @@ enum WallpaperCatalog {
         switch source {
         case .cowabunga:
             guard let category else {
-                throw GoldenNuggetError("Cowabunga publishes its catalog per category; "
-                    + "pick Custom or Apple.")
+                throw GoldenNuggetError("Cowabunga 的墙纸目录按分类发布；"
+                    + "请选择 Custom 或 Apple。")
             }
             guard let url = URL(string: cowabungaBase + category.fileName) else {
-                throw GoldenNuggetError("Cowabunga's catalog URL is malformed")
+                throw GoldenNuggetError("Cowabunga 的墙纸目录 URL 无效")
             }
             return url
         case .caplayground:
             guard let url = URL(string: caplaygroundJSON) else {
-                throw GoldenNuggetError("CaPlayground's catalog URL is malformed")
+                throw GoldenNuggetError("CaPlayground 的墙纸目录 URL 无效")
             }
             return url
         case .all:
-            throw GoldenNuggetError("'All' is not a catalog; it expands to the two sources")
+            throw GoldenNuggetError("“全部”不是墙纸目录；它会展开为两个来源")
         }
     }
 
@@ -262,7 +262,7 @@ enum WallpaperCatalog {
         switch source {
         case .cowabunga:
             guard let items = object as? [[String: Any]] else {
-                throw GoldenNuggetError("Cowabunga's catalog is not a list of wallpapers")
+                throw GoldenNuggetError("Cowabunga 的墙纸目录不是墙纸列表")
             }
             return items.compactMap { item in
                 wallpaper(item: item,
@@ -288,7 +288,7 @@ enum WallpaperCatalog {
                           source: source)
             }
         case .all:
-            throw GoldenNuggetError("'All' has no catalog of its own to parse")
+            throw GoldenNuggetError("“全部”没有自己的墙纸目录可解析")
         }
     }
 
@@ -302,7 +302,7 @@ enum WallpaperCatalog {
         guard let raw = item[downloadKey] as? String, !raw.isEmpty,
               let download = resolve(raw, against: base) else { return nil }
         let name = (item["name"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
-        return Wallpaper(name: (name?.isEmpty == false ? name! : "Untitled"),
+        return Wallpaper(name: (name?.isEmpty == false ? name! : "无标题"),
                          author: (item[authorKey] as? String) ?? "",
                          details: (item["description"] as? String) ?? "",
                          previewURL: (item["preview"] as? String).flatMap { resolve($0, against: base) },
@@ -391,10 +391,10 @@ enum WallpaperCatalog {
     static func download(_ wallpaper: Wallpaper) async throws -> URL {
         let (data, response) = try await session.data(from: wallpaper.downloadURL)
         if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
-            throw GoldenNuggetError("\(wallpaper.name): the server answered HTTP \(http.statusCode)")
+            throw GoldenNuggetError("\(wallpaper.name)：服务器返回 HTTP \(http.statusCode)")
         }
         guard !data.isEmpty else {
-            throw GoldenNuggetError("\(wallpaper.name): the download came back empty")
+            throw GoldenNuggetError("\(wallpaper.name)：下载内容为空")
         }
         let destination = FileManager.default.temporaryDirectory
             .appendingPathComponent("\(sanitised(wallpaper.name)).tendies")

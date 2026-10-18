@@ -54,10 +54,10 @@ enum PosterBoardPosterType: String, CaseIterable, Identifiable, Codable {
 
     var label: String {
         switch self {
-        case .collections: return "Collections"
-        case .suggestedPhotos: return "Suggested Photos"
+        case .collections: return "收藏"
+        case .suggestedPhotos: return "建议照片"
         case .mercury: return "Mercury"
-        case .container: return "App Container"
+        case .container: return "App 容器"
         }
     }
 
@@ -111,8 +111,8 @@ struct PosterBoardTendie: Identifiable, Hashable {
         do {
             archive = try Archive(url: url, accessMode: .read)
         } catch {
-            throw GoldenNuggetError("\(url.lastPathComponent) is not a readable .tendies "
-                + "archive: \(error.localizedDescription)")
+            throw GoldenNuggetError("\(url.lastPathComponent) 不是可读的 .tendies "
+                + "归档：\(error.localizedDescription)")
         }
 
         var descriptors = 0
@@ -162,8 +162,8 @@ struct PosterBoardTendie: Identifiable, Hashable {
         }
 
         if descriptors == 0 && !container {
-            throw GoldenNuggetError("\(url.lastPathComponent) holds no descriptor and no "
-                + "container — it does not look like a .tendies pack.")
+            throw GoldenNuggetError("\(url.lastPathComponent) 不包含描述符，也不包含 "
+                + "容器 —— 它看起来不像 .tendies 包。")
         }
         self.descriptorCount = descriptors
         self.isContainer = container
@@ -233,10 +233,10 @@ struct PosterBoardTendie: Identifiable, Hashable {
     var summary: String {
         if isContainer {
             return isUnsafeContainer
-                ? "container, carries the database — upstream says reset all wallpapers first"
-                : "container snapshot"
+                ? "容器，且包含数据库 —— 上游建议先重置所有墙纸"
+                : "容器快照"
         }
-        return descriptorCount == 1 ? "1 descriptor" : "\(descriptorCount) descriptors"
+        return descriptorCount == 1 ? "1 个描述符" : "\(descriptorCount) 个描述符"
     }
 
     /// Unpack into `destination`, exactly as `TendieFile.extract` does.
@@ -256,13 +256,13 @@ struct PosterBoardTendie: Identifiable, Hashable {
             let relative = entry.path
             guard !relative.hasPrefix("/"),
                   !relative.split(separator: "/").contains("..") else {
-                throw GoldenNuggetError("\(name): the archive holds an entry that escapes the "
-                    + "extraction directory (\(relative)).")
+                throw GoldenNuggetError("\(name)：归档中包含一个会逃逸 "
+                    + "解压目录的条目（\(relative)）。")
             }
             let target = URL(fileURLWithPath: root + "/" + relative)
             guard target.standardizedFileURL.path.hasPrefix(root) else {
-                throw GoldenNuggetError("\(name): refusing to write \(relative) outside the "
-                    + "extraction directory.")
+                throw GoldenNuggetError("\(name)：拒绝将 \(relative) 写入 "
+                    + "解压目录之外。")
             }
             // A directory entry can legitimately be repeated or already exist
             // (some zips carry both `a/` and `a/b`), and the reference's
@@ -297,19 +297,19 @@ struct LegacyConvertPrompt: Identifiable {
 
     /// The dialog's `setText`: "<b>pack</b> uses the legacy A, B format."
     var title: String {
-        "\(pack.name) uses the legacy \(families.joined(separator: ", ")) format."
+        "\(pack.name) 使用了旧版 \(families.joined(separator: ", ")) 格式。"
     }
 
     /// The dialog's `setInformativeText`, verbatim.
-    static let message = "iOS 27 only applies the depth effect to wallpapers in the modern "
-        + "format, so a legacy wallpaper is rewritten on import. Pick “Install as is” to push "
-        + "the original files untouched instead."
+    static let message = "iOS 27 只会对现代格式的墙纸应用景深效果，"
+        + "因此旧版墙纸会在导入时被重写。选择“按原样安装”可以改为推送 "
+        + "未经改动的原始文件。"
 
     /// `Convert (may break the wallpaper)` — the reference's accepted-role button,
     /// and its default.
-    static let convertTitle = "Convert (may break the wallpaper)"
+    static let convertTitle = "转换（可能损坏墙纸）"
     /// `Install as is` — the reference's rejected-role button.
-    static let asIsTitle = "Install as is"
+    static let asIsTitle = "按原样安装"
 }
 
 /// The imported packs, as files in this app's container.
@@ -348,7 +348,7 @@ enum PosterBoardImports {
         do {
             try FileManager.default.copyItem(at: source, to: destination)
         } catch {
-            throw GoldenNuggetError("Could not copy \(source.lastPathComponent) into the app: "
+            throw GoldenNuggetError("无法将 \(source.lastPathComponent) 复制到应用中："
                 + error.localizedDescription)
         }
         do {

@@ -76,13 +76,13 @@ struct TweaksView: View {
             if !tail.isEmpty { logSection }
         }
         .listStyle(.insetGrouped)
-        .navigationTitle("Tweaks")
+        .navigationTitle("调整项")
         // The reference's list search (`gui/ios/tweaks.py`, `ListSearch`): a
         // field that filters the cards by every whitespace-separated word of
         // the query, over the title, the description and the tweak's id.
         .searchable(text: $searchText,
                     placement: .navigationBarDrawer(displayMode: .always),
-                    prompt: "Search tweaks")
+                    prompt: "搜索调整项")
         // Compact widths only -- on a tablet the split view draws its own sidebar
         // toggle, and a second button beside it is the duplicate-controls mess.
         .goldenSidebarButton()
@@ -133,17 +133,17 @@ struct TweaksView: View {
         Section {
             Text(identity.describe)
                 .font(.headline)
-            NativeNote("\(selection.enabledCount) of \(visibleSpecs.count) applicable tweak(s) enabled. "
-                + "Incompatible and un-ported tweaks are hidden, the same way the reference hides them.")
+            NativeNote("\(selection.enabledCount) / \(visibleSpecs.count) 个可用调整项已启用。"
+                + "不兼容和未移植的调整项会被隐藏，与原版的做法一致。")
         }
     }
 
     private var importSection: some View {
-        Section("Saved state") {
+        Section("已保存状态") {
             Button {
                 showImporter = true
             } label: {
-                Label("Import autosave.json", systemImage: "square.and.arrow.down")
+                Label("导入 autosave.json", systemImage: "square.and.arrow.down")
             }
             .disabled(running)
 
@@ -156,7 +156,7 @@ struct TweaksView: View {
                 // and the latter cannot resurrect a cleared tweak.
                 GoldenNuggetAutosave.clear()
             } label: {
-                Label("Clear all tweaks", systemImage: "xmark.circle")
+                Label("清除所有调整项", systemImage: "xmark.circle")
             }
             .disabled(running || selection.enabledCount == 0)
 
@@ -193,7 +193,7 @@ struct TweaksView: View {
     }
 
     private func reportSection(_ report: TweakImportReport) -> some View {
-        Section("Import result") {
+        Section("导入结果") {
             ForEach(Array(report.logLines.enumerated()), id: \.offset) { _, line in
                 Text(line)
                     .font(.system(.caption, design: .monospaced))
@@ -206,13 +206,13 @@ struct TweaksView: View {
     }
 
     private func errorSection(_ message: String) -> some View {
-        Section("Import failed") {
+        Section("导入失败") {
             NativeNote(message)
         }
     }
 
     private var logSection: some View {
-        Section("Run log (last 30 lines)") {
+        Section("运行日志（最后 30 行）") {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 2) {
                     ForEach(Array(tail.enumerated()), id: \.offset) { _, line in
@@ -265,7 +265,7 @@ struct TweaksView: View {
     /// nothing survived it.
     private var emptySearchSection: some View {
         Section {
-            Text("No matches found.")
+            Text("未找到匹配项。")
                 .foregroundStyle(.secondary)
         }
     }
@@ -292,11 +292,11 @@ struct TweaksView: View {
     /// manual path for a preset that came from somewhere else.
     private var autosaveNote: String {
         let path = "Documents/GoldenNugget/Presets/\(GoldenNuggetAutosave.presetName).json"
-        let state = autosaveSaved ? "saved" : "nothing saved yet"
-        return "Your selection is saved to \(path) on every change and restored on "
-            + "launch, exactly as the desktop app's AutoSave preset does (\(state)). "
-            + "Import is for a preset from elsewhere; entries this port does not carry "
-            + "are listed below rather than guessed at."
+        let state = autosaveSaved ? "已保存" : "尚未保存"
+        return "每次更改时，你的选择都会保存到 \(path)，并在"
+            + "启动时恢复，与桌面版的自动保存预设完全一致（\(state)）。"
+            + "导入用于来自其他来源的预设；此移植版不支持的条目"
+            + "会列在下方，而不会猜测处理。"
     }
 
     private func importAutosave(from url: URL) {

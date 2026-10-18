@@ -114,7 +114,7 @@ struct TweakPayloadUnavailable: Error, LocalizedError {
     let reason: String
 
     var errorDescription: String? {
-        "The payload for \(payload) is gone from disk (\(file)): \(reason)"
+        "载荷 \(payload) 已从磁盘上消失（\(file)）：\(reason)"
     }
 }
 
@@ -165,7 +165,7 @@ enum TweakCompiler {
         for spec in TweakCatalog.allWithDaemons where !spec.disabled {
             guard selection.isOn(spec) else { continue }
             guard spec.isCompatible(deviceVersion: deviceVersion, isIPhone: isIPhone) else {
-                skipped.append((spec.id, "not compatible with this device / iOS version"))
+                skipped.append((spec.id, "与此设备 / iOS 版本不兼容"))
                 continue
             }
 
@@ -200,7 +200,7 @@ enum TweakCompiler {
             }
 
             guard !spec.key.isEmpty else {
-                skipped.append((spec.id, "registry entry has no plist key"))
+                skipped.append((spec.id, "注册表条目缺少 plist 键"))
                 continue
             }
             if plists[spec.location] == nil { order.append(spec.location) }
@@ -215,7 +215,7 @@ enum TweakCompiler {
         for location in order {
             if nullified.contains(location) {
                 guard let dest = TweakDomainMap.split(path: location.rawValue) else {
-                    skipped.append((location.rawValue, "no backup-domain prefix matches this location"))
+                    skipped.append((location.rawValue, "没有与该位置匹配的备份域前缀"))
                     continue
                 }
                 payloads.append(TweakPayload(domain: dest.domain,
@@ -231,7 +231,7 @@ enum TweakCompiler {
             // absolute path), which would inject a row no device ever produced.
             // Refusing instead of reproducing that is deliberate.
             guard let dest = TweakDomainMap.split(path: location.rawValue) else {
-                skipped.append((location.rawValue, "no backup-domain prefix matches this location"))
+                skipped.append((location.rawValue, "没有与该位置匹配的备份域前缀"))
                 continue
             }
             payloads.append(TweakPayload(domain: dest.domain,

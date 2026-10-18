@@ -116,9 +116,9 @@ enum BackupInjector {
                              relativePath: row.path, flags: row.flags, blob: blob)
         }
 
-        AppLog.write("Injected system plist \(domain)/\(relativePath) "
-            + "(fileID=\(fileID), \(contents.count) bytes, owner \(systemOwner), class "
-            + "\(PROTECTION_CLASS_SYSTEM_FILE))")
+        AppLog.write("已注入系统 plist \(domain)/\(relativePath) "
+            + "（fileID=\(fileID)，\(contents.count) 字节，所有者 \(systemOwner)，类别 "
+            + "\(PROTECTION_CLASS_SYSTEM_FILE) 级）")
         AppLog.write(store.blobKeySample(ours: fileID))
     }
 
@@ -182,8 +182,8 @@ enum BackupInjector {
             for bundleID in appBundleIDs {
                 let entry = try await Minimuxer.shared().appFactoryEntry(bundleId: bundleID)
                 records[bundleID] = entry
-                AppLog.write("Registered restore AppDomain for \(bundleID) "
-                    + "(\(entry.keys.count) installation_proxy field(s))")
+                AppLog.write("已为 \(bundleID) 注册恢复用 AppDomain "
+                    + "（\(entry.keys.count) 个 installation_proxy 字段）")
             }
             applications = records
         }
@@ -209,28 +209,28 @@ enum BackupInjector {
             }
             mbdbStage.done()
             try? FileManager.default.removeItem(at: deviceDir.appendingPathComponent("Manifest.db"))
-            AppLog.write("Partial Restore: \(rows.count) MBDB row(s), "
-                         + "\(tweakPayloads.count) payload(s) flat")
+            AppLog.write("部分恢复：\(rows.count) 个 MBDB 行，"
+                         + "\(tweakPayloads.count) 个平铺载荷")
             return
         }
 
         if prune {
-            AppLog.write("Pruning Manifest.db…")
+            AppLog.write("正在清理 Manifest.db…")
             let pruneStage = StageTimer("prune Manifest.db")
             store.pruneToDiskState()
             pruneStage.done()
         } else {
-            AppLog.write("Partial Restore: synthesising the backup, nothing to prune.")
+            AppLog.write("部分恢复：正在合成备份，无需清理。")
         }
 
         let tweakStage = StageTimer("inject tweaks")
-        AppLog.write("Injecting \(tweakPayloads.count) tweak file(s)…")
+        AppLog.write("正在注入 \(tweakPayloads.count) 个调整项文件…")
         let report = try TweakInjector.inject(into: deviceDir, payloads: tweakPayloads)
         tweakStage.done(report.summary)
-        AppLog.write("Tweaks injected: \(report.summary)")
+        AppLog.write("调整项已注入：\(report.summary)")
         for domain in report.unverifiedDomains {
-            AppLog.write("note: the \(domain) row shape is measured from the device's own "
-                + "backup but has not been confirmed by a run yet")
+            AppLog.write("注意：\(domain) 的行结构是根据设备自身备份推断的，"
+                + "但尚未经过实际运行确认")
         }
     }
 }

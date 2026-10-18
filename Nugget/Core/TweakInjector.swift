@@ -186,7 +186,7 @@ enum TweakInjector {
         let unverifiedDomains: [String]
 
         var summary: String {
-            "\(files) tweak file(s) in \(dirRows) directory row(s)"
+            "\(files) 个调整项文件，\(dirRows) 条目录记录"
         }
     }
 

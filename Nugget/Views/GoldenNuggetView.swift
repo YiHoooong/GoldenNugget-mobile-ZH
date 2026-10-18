@@ -119,7 +119,7 @@ struct GoldenNuggetView: View {
     ///
     /// `refreshTunnelStatus()` fills both, off the main actor, and only while the
     /// disclosure is open.
-    @State private var tunnelSummary = "not probed"
+    @State private var tunnelSummary = "尚未探测"
     @State private var peerReachable: Bool?
 
     /// Explicit, so `AppShell.swift` gets a signature it can depend on.
@@ -229,15 +229,15 @@ struct GoldenNuggetView: View {
         .onChange(of: wirelessPair.generatedRecordPath) { _, path in
             adoptGeneratedPairingFile(at: path)
         }
-        .alert("Error", isPresented: Binding(get: { errorText != nil }, set: { if !$0 { errorText = nil } })) {
-            Button("OK") {}
+        .alert("错误", isPresented: Binding(get: { errorText != nil }, set: { if !$0 { errorText = nil } })) {
+            Button("好") {}
         } message: {
             Text(errorText ?? "?")
         }
-        .alert("Applied", isPresented: $showRebootNotice) {
-            Button("OK") {}
+        .alert("已应用", isPresented: $showRebootNotice) {
+            Button("好") {}
         } message: {
-            Text("Reboot the target device so the injected preferences take effect.")
+            Text("请重启目标设备，使注入的偏好设置生效。")
         }
         .sheet(isPresented: $showResetSheet) {
             ResetPagesSheet(deviceVersion: identity.version,
@@ -321,9 +321,9 @@ struct GoldenNuggetView: View {
     }
 
     private var connectionState: (text: String, tone: GoldenTone) {
-        guard paired else { return ("Not connected", .secondary) }
-        guard !identity.version.isEmpty else { return ("Partially Supported", .warning) }
-        return ("Supported!", .success)
+        guard paired else { return ("未连接", .secondary) }
+        guard !identity.version.isEmpty else { return ("部分支持", .warning) }
+        return ("支持！", .success)
     }
 
     /// The reference's apply card (`IOSApplyPage`: a description, the button, and
@@ -332,7 +332,7 @@ struct GoldenNuggetView: View {
     private var applyCard: some View {
         Section {
             NativeNote(applyNote)
-            NativePrimaryButton(title: running ? "Applying…" : applyTitle,
+            NativePrimaryButton(title: running ? "正在应用…" : applyTitle,
                                 running: running,
                                 disabled: !canApply) {
                 applyTweaks()
@@ -354,7 +354,7 @@ struct GoldenNuggetView: View {
                 // wedged is only safe if it can be stopped by hand. A blocked
                 // Rust read cannot be interrupted, so this abandons the call
                 // and unwinds: the guard notices the flag at its next poll.
-                NativeDangerButton(title: "Stop run") {
+                NativeDangerButton(title: "停止运行") {
                     GoldenNuggetEngine.shared.requestCancel()
                 }
             }
@@ -372,12 +372,12 @@ struct GoldenNuggetView: View {
                 .progressViewStyle(.linear)
                 .opacity(progress == nil ? 0.35 : 1)
             HStack {
-                Text(progress == nil ? "working…" : String(format: "%.0f%%", progress ?? 0))
+                Text(progress == nil ? "处理中…" : String(format: "%.0f%%", progress ?? 0))
                 if !eta.isEmpty {
                     Spacer()
                     // `eta.py`'s "m:ss" remaining — empty until a stable rate is
                     // known, so this line simply does not appear early on.
-                    Text("≈ \(eta) remaining")
+                    Text("剩余 ≈ \(eta)")
                 }
             }
             .font(.caption)
@@ -397,10 +397,10 @@ struct GoldenNuggetView: View {
     /// nothing to the device while reading as though it had.
     private var clearCard: some View {
         Section {
-            NativeNote("Puts whole pages back to stock on the device: the files those "
-                + "pages' tweaks are written to are overwritten with what a fresh device has. "
-                + "Choose the pages in the next screen.")
-            NativeDangerButton(title: "Reset Tweaks",
+            NativeNote("将设备上的整个页面恢复为出厂状态：这些页面的"
+                + "调整项所写入的文件会被替换为全新设备的内容。"
+                + "在下一屏中选择要恢复的页面。")
+            NativeDangerButton(title: "重置调整项",
                                disabled: running || resetting) {
                 showResetSheet = true
             }
@@ -414,7 +414,7 @@ struct GoldenNuggetView: View {
         guard !pages.isEmpty else { return }
         resetting = true
         RunLog.shared.clear()
-        showStatus("Resetting \(pages.count) page(s)…", .accent, autoHide: false)
+        showStatus("正在重置 \(pages.count) 个页面…", .accent, autoHide: false)
         Task {
             var text = ""
             var tone: GoldenTone = .primary
@@ -422,13 +422,13 @@ struct GoldenNuggetView: View {
             var recordedError = ""
             do {
                 try await GoldenNuggetEngine.shared.resetPages(pages: pages)
-                text = "Reset done. Reboot the device."
+                text = "重置完成。请重启设备。"
                 tone = .success
                 succeeded = true
             } catch let failure as TransportFailure where failure.isCancellation {
-                text = "⏹ stopped by the user (\(failure.label))"
+                text = "⏹ 已由用户停止（\(failure.label)）"
                 tone = .warning
-                recordedError = "stopped by the user (\(failure.label))"
+                recordedError = "已由用户停止（\(failure.label)）"
             } catch {
                 text = "❌ \(error.localizedDescription)"
                 tone = .error
@@ -463,12 +463,12 @@ struct GoldenNuggetView: View {
     }
 
     private var connectionSection: some View {
-        Section("Connection") {
+        Section("连接") {
             if paired {
                 Button {
                     resetPairing()
                 } label: {
-                    Label("Reset pairing file", systemImage: "arrow.counterclockwise")
+                    Label("重置配对文件", systemImage: "arrow.counterclockwise")
                 }
             } else if wirelessPair.isRunning {
                 wirelessPairProgress
@@ -476,7 +476,7 @@ struct GoldenNuggetView: View {
                 Button {
                     showPairingImporter.toggle()
                 } label: {
-                    Label("Select Pairing File", systemImage: "doc.badge.plus")
+                    Label("选择配对文件", systemImage: "doc.badge.plus")
                 }
                 // iOS 27 lets the device pair with itself: the service below is
                 // discovered by this same phone's RemotePairing daemon, so no
@@ -484,7 +484,7 @@ struct GoldenNuggetView: View {
                 Button {
                     wirelessPair.start()
                 } label: {
-                    Label("Pair Wirelessly", systemImage: "wifi")
+                    Label("无线配对", systemImage: "wifi")
                 }
                 if case .failed(let message) = wirelessPair.phase {
                     NativeSafetyNote(message)
@@ -514,27 +514,27 @@ struct GoldenNuggetView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
                 ProgressView()
-                Text(wirelessPair.serviceName.map { "Advertising “\($0)” — waiting for this iPhone to connect…" }
-                     ?? "Starting the pairing service…")
+                Text(wirelessPair.serviceName.map { "正在广播“\($0)”——等待此 iPhone 连接…" }
+                     ?? "正在启动配对服务…")
                     .font(.subheadline)
                     .fixedSize(horizontal: false, vertical: true)
             }
             if let pin = wirelessPair.pin {
-                Text("PIN: \(pin)")
+                Text("PIN 码：\(pin)")
                     .font(.title3.monospaced().weight(.semibold))
                     .textSelection(.enabled)
-                NativeNote("Confirm this PIN in Settings → Privacy & Security → Developer "
-                    + "Mode → “Pair with \(WirelessPairing.displayName)” to finish pairing.")
+                NativeNote("请在“设置”→“隐私与安全性”→"
+                    + "“开发者模式”中确认此 PIN，再点按“与 \(WirelessPairing.displayName) 配对”以完成配对。")
             } else {
-                NativeNote("Leave this screen open, then open Settings → Privacy & Security → "
-                    + "Developer Mode on this iPhone and tap “Pair with "
-                    + "\(WirelessPairing.displayName)”. iOS 27 connects the phone to the "
-                    + "advertised service itself — no computer is involved.")
+                NativeNote("请保持此屏幕打开，然后在此 iPhone 上打开“设置”→“隐私与安全性”→"
+                    + "“开发者模式”，并点按“与 "
+                    + "\(WirelessPairing.displayName) 配对”。iOS 27 会自行将此 iPhone 连接到"
+                    + "所广播的服务——全程无需电脑。")
             }
             Button(role: .destructive) {
                 wirelessPair.cancel()
             } label: {
-                Label("Cancel pairing", systemImage: "xmark.circle")
+                Label("取消配对", systemImage: "xmark.circle")
             }
         }
     }
@@ -549,39 +549,39 @@ struct GoldenNuggetView: View {
     private var tunnelDisclosure: some View {
         DisclosureGroup(isExpanded: $tunnelExpanded) {
             VStack(alignment: .leading, spacing: 12) {
-                NativeNote("How this app finds the LocalDevVPN tunnel: it waits for the "
-                    + "tunnel IP on an interface, then probes the peer's lockdown port. "
-                    + "\(Tunnel.isCustomised ? "Custom values in use." : "Defaults in use.") "
-                    + "These steer this app only — the vendored library finds the peer from the "
-                    + "route table and always dials 62078.")
+                NativeNote("本应用如何找到 LocalDevVPN 隧道：它会等待"
+                    + "某个接口上的隧道 IP，然后探测对端的 lockdown 端口。"
+                    + "\(Tunnel.isCustomised ? "使用自定义值。" : "使用默认值。") "
+                    + "这些设置只影响本应用——内置库从路由表找到对端，"
+                    + "并始终拨号 62078。")
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Tunnel IP (this device)")
+                    Text("隧道 IP（此设备）")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    TextField("Tunnel IP (this device)", text: $tunnelIfaceIP)
+                    TextField("隧道 IP（此设备）", text: $tunnelIfaceIP)
                         .textFieldStyle(.roundedBorder)
                         .autocorrectionDisabled()
                         .textInputAutocapitalization(.never)
                         .keyboardType(.numbersAndPunctuation)
                     if !tunnelIfaceIPOK {
-                        NativeSafetyNote("Not an IPv4 address — \(Tunnel.defaultIfaceIP) is being probed instead.")
+                        NativeSafetyNote("不是 IPv4 地址——将改为探测 \(Tunnel.defaultIfaceIP)。")
                     }
                 }
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Peer IP (the VPN server)")
+                    Text("对端 IP（VPN 服务器）")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    TextField("Peer IP (the VPN server)", text: $tunnelPeerIP)
+                    TextField("对端 IP（VPN 服务器）", text: $tunnelPeerIP)
                         .textFieldStyle(.roundedBorder)
                         .autocorrectionDisabled()
                         .textInputAutocapitalization(.never)
                         .keyboardType(.numbersAndPunctuation)
                     if !tunnelPeerIPOK {
-                        NativeSafetyNote("Not an IPv4 address — \(Tunnel.defaultPeerIP) is being probed instead.")
+                        NativeSafetyNote("不是 IPv4 地址——将改为探测 \(Tunnel.defaultPeerIP)。")
                     }
                 }
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Lockdown port")
+                    Text("Lockdown 端口")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     TextField(String(Tunnel.defaultServicePort), text: $tunnelPort)
@@ -593,11 +593,11 @@ struct GoldenNuggetView: View {
                         .keyboardType(.numberPad)
                         .nativeKeyboardDone()
                     if !tunnelPortOK {
-                        NativeSafetyNote("Not a port in 1…65535 — \(Tunnel.defaultServicePort) is being probed instead.")
+                        NativeSafetyNote("端口不在 1…65535 范围内——将改为探测 \(Tunnel.defaultServicePort)。")
                     }
                 }
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Tunnel IP prefix length")
+                    Text("隧道 IP 前缀长度")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     TextField(String(Tunnel.defaultPrefixLength), text: $tunnelPrefixLength)
@@ -609,14 +609,14 @@ struct GoldenNuggetView: View {
                         .keyboardType(.numberPad)
                         .nativeKeyboardDone()
                     if !tunnelPrefixOK {
-                        NativeSafetyNote("Not 0…32 — LocalDevVPN's tunnel-IP field takes a CIDR, and this is the part after the slash.")
+                        NativeSafetyNote("不在 0…32 范围内——LocalDevVPN 的隧道 IP 字段接受 CIDR，这里填的是斜杠后的数字。")
                     }
                 }
-                NativeNote("Copy into LocalDevVPN: tunnel IP \(Tunnel.ifaceIP)/\(Tunnel.ifacePrefixLength), peer \(Tunnel.peerIP), port \(Tunnel.servicePort).")
+                NativeNote("复制到 LocalDevVPN：隧道 IP \(Tunnel.ifaceIP)/\(Tunnel.ifacePrefixLength)，对端 \(Tunnel.peerIP)，端口 \(Tunnel.servicePort)。")
                 // Both values come from state — see `tunnelSummary`.  The probe
                 // is a 2 s `poll()` and must never run in a body.
-                Text("tunnel: \(tunnelSummary) · peer \(Tunnel.peerIP):\(Tunnel.servicePort) "
-                    + "reachable: \(peerReachable.map(String.init) ?? "…")")
+                Text("隧道：\(tunnelSummary) · 对端 \(Tunnel.peerIP):\(Tunnel.servicePort) "
+                    + "可达：\(peerReachable.map(String.init) ?? "…")")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -626,16 +626,16 @@ struct GoldenNuggetView: View {
                     tunnelPeerIP = Tunnel.defaultPeerIP
                     tunnelPort = String(Tunnel.defaultServicePort)
                     tunnelPrefixLength = String(Tunnel.defaultPrefixLength)
-                    GoldenNuggetEngine.shared.log("tunnel addresses reset to defaults: \(Tunnel.requirements)")
+                    GoldenNuggetEngine.shared.log("隧道地址已重置为默认值：\(Tunnel.requirements)")
                     Task { await refreshTunnelStatus() }
                 } label: {
-                    Label("Reset tunnel addresses", systemImage: "arrow.counterclockwise")
+                    Label("重置隧道地址", systemImage: "arrow.counterclockwise")
                 }
             }
             .padding(.top, 8)
         } label: {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Tunnel settings")
+                Text("隧道设置")
                     .font(.headline)
                 Text(Tunnel.requirements)
                     .font(.caption)
@@ -654,24 +654,24 @@ struct GoldenNuggetView: View {
     private var tunnelPrefixOK: Bool { Tunnel.validPrefixLength(tunnelPrefixLength) != nil }
 
     private var diagnosticsSection: some View {
-        Section("Diagnostics") {
+        Section("诊断") {
             Button {
                 Task {
                     let block = await GoldenNuggetEngine.shared.diagnostics()
                     RunLog.shared.append(block)
                 }
             } label: {
-                Label("Dump Diagnostics Into Log", systemImage: "doc.text.magnifyingglass")
+                Label("将诊断信息写入日志", systemImage: "doc.text.magnifyingglass")
             }
             .disabled(running)
             // Share sheets beat hand-selecting text: the diagnostics block and
             // the full Rust log are files in Documents.  AirDrop / Save to
             // Files gets them off the device intact.
-            shareRow(title: "Share diagnostics.txt",
+            shareRow(title: "分享 diagnostics.txt",
                      systemImage: "square.and.arrow.up",
                      url: GoldenNuggetEngine.diagnosticsURL,
                      available: hasDiagnostics)
-            shareRow(title: "Share minimuxer.log (\(GoldenNuggetEngine.rustLogSize() / 1024) KB)",
+            shareRow(title: "分享 minimuxer.log（\(GoldenNuggetEngine.rustLogSize() / 1024) KB）",
                      systemImage: "doc.text.magnifyingglass",
                      url: GoldenNuggetEngine.rustLogURL,
                      available: GoldenNuggetEngine.rustLogSize() > 0)
@@ -679,13 +679,13 @@ struct GoldenNuggetView: View {
             // half of the evidence: the Rust log shows what the protocol did,
             // this one shows what the host decided (filter keeps, commit
             // accounting, staging leftovers).
-            shareRow(title: "Share goldennugget.log (\(GoldenNuggetEngine.appLogSize() / 1024) KB)",
+            shareRow(title: "分享 goldennugget.log（\(GoldenNuggetEngine.appLogSize() / 1024) KB）",
                      systemImage: "doc.plaintext",
                      url: GoldenNuggetEngine.appLogURL,
                      available: GoldenNuggetEngine.appLogSize() > 0)
-            NativeNote("The dump carries a keyword slice of the Rust log "
-                + "(mobilebackup2 protocol + jktcp flow verdict) scoped to this run, plus "
-                + "the app log tail (host-side decisions).")
+            NativeNote("该转储包含 Rust 日志中的关键词片段"
+                + "（mobilebackup2 协议 + jktcp 流判定），范围限于本次运行，外加"
+                + "应用日志末尾（主机侧决策）。")
         }
     }
 
@@ -715,24 +715,24 @@ struct GoldenNuggetView: View {
     /// payload is how a user ends up surprised by a wallpaper they forgot they picked.
     private var applyTitle: String {
         switch (tweakSelection.enabledCount > 0, posterBoardSelection.isActive) {
-        case (true, true): return "Apply Tweaks & Wallpapers"
-        case (false, true): return "Apply Wallpapers"
-        case (true, false): return "Apply Tweaks"
-        case (false, false): return "Apply"
+        case (true, true): return "应用调整项与墙纸"
+        case (false, true): return "应用墙纸"
+        case (true, false): return "应用调整项"
+        case (false, false): return "应用"
         }
     }
 
     private var applyNote: String {
-        var lines = ["Applies every enabled tweak to the device."
-            + " Reboot it when this is done — the injected preferences are read at boot."]
+        var lines = ["将每个已启用的调整项应用到设备。"
+            + "完成后请重启设备——注入的偏好设置在启动时读取。"]
         if posterBoardSelection.isActive {
-            lines.append("This run also delivers the PosterBoard page's selection "
-                + "(\(posterBoardSelection.describe)) — one backup, one restore, the same "
-                + "channel. That stage fetches the store's database from the device first, "
-                + "so it takes one extra exchange.")
+            lines.append("本次运行还会应用海报板页面的选择"
+                + "（\(posterBoardSelection.describe)）——一次备份、一次恢复，走同一"
+                + "通道。该阶段会先从设备获取商店数据库，"
+                + "因此会多一次数据交换。")
         } else {
-            lines.append("Nothing is selected on the PosterBoard page, so this run carries "
-                + "only the tweaks.")
+            lines.append("海报板页面未选择任何内容，因此本次运行只应用"
+                + "调整项。")
         }
         return lines.joined(separator: "\n\n")
     }
@@ -764,9 +764,9 @@ struct GoldenNuggetView: View {
         // The reset used to leave no trace anywhere, which is why "the record
         // came back after a restart" was invisible in the one place it could
         // have been seen.
-        GoldenNuggetEngine.shared.log("pairing reset: record cleared from memory and UserDefaults; "
-            + "\(AppPaths.pairingFile.lastPathComponent) kept on disk, automatic import "
-            + "disabled until the next import")
+        GoldenNuggetEngine.shared.log("配对重置：已从内存与 UserDefaults 中清除记录；"
+            + "\(AppPaths.pairingFile.lastPathComponent) 仍保留在磁盘上，自动导入"
+            + "已禁用，直到下次导入")
     }
 
     /// The pairing record's format facts — the accepted extensions, the shape
@@ -822,19 +822,19 @@ struct GoldenNuggetView: View {
         for (source, rawOpt) in candidates {
             guard let raw = rawOpt?.trimmingCharacters(in: .whitespacesAndNewlines), !raw.isEmpty else { continue }
             guard PairingRecord.usable(raw) else {
-                GoldenNuggetEngine.shared.log("pairing record rejected (\(source)): \(PairingRecord.sourceLabel(raw))")
+                GoldenNuggetEngine.shared.log("配对记录被拒绝（\(source)）：\(PairingRecord.sourceLabel(raw))")
                 continue
             }
             let onDisk = (try? String(contentsOf: dest, encoding: .utf8))?
                 .trimmingCharacters(in: .whitespacesAndNewlines)
             if onDisk == raw {
-                GoldenNuggetEngine.shared.log("pairing record: \(source) (\(PairingRecord.sourceLabel(raw)))")
+                GoldenNuggetEngine.shared.log("配对记录：\(source)（\(PairingRecord.sourceLabel(raw))）")
             } else {
                 do {
                     try raw.write(to: dest, atomically: true, encoding: .utf8)
-                    GoldenNuggetEngine.shared.log("pairing record re-imported from \(source) into \(dest.lastPathComponent) (\(PairingRecord.sourceLabel(raw)))")
+                    GoldenNuggetEngine.shared.log("配对记录已从 \(source) 重新导入到 \(dest.lastPathComponent)（\(PairingRecord.sourceLabel(raw))）")
                 } catch {
-                    GoldenNuggetEngine.shared.log("pairing record found (\(source)) but could not be written to Documents: \(error.localizedDescription)")
+                    GoldenNuggetEngine.shared.log("找到配对记录（\(source)），但无法写入 Documents：\(error.localizedDescription)")
                 }
             }
             pairingFileRaw = raw
@@ -847,9 +847,9 @@ struct GoldenNuggetView: View {
         pairingFileURL = nil
         if pairingFileRaw != nil {
             pairingFileRaw = nil
-            GoldenNuggetEngine.shared.log("stored pairing record was unusable — cleared, import a pairing file to connect")
+            GoldenNuggetEngine.shared.log("存储的配对记录不可用——已清除，请导入配对文件以连接")
         } else if embedded == nil {
-            GoldenNuggetEngine.shared.log("no pairing record: none on disk, none stored, and the installer embedded no ALTPairingFile")
+            GoldenNuggetEngine.shared.log("没有配对记录：磁盘上没有，也没有存储的记录，安装包也未嵌入 ALTPairingFile")
         }
         return false
     }
@@ -875,8 +875,8 @@ struct GoldenNuggetView: View {
         autoImportDisabled = false
         pairingFileRaw = record
         pairingFileURL = AppPaths.pairingFile.path
-        GoldenNuggetEngine.shared.log("pairing file imported: \(PairingRecord.sourceLabel(record)) "
-            + "→ \(AppPaths.pairingFile.lastPathComponent), \(record.count) bytes, read back OK")
+        GoldenNuggetEngine.shared.log("配对文件已导入：\(PairingRecord.sourceLabel(record)) "
+            + "→ \(AppPaths.pairingFile.lastPathComponent)，\(record.count) 字节，回读正常")
         startMinimuxer()
     }
 
@@ -892,7 +892,7 @@ struct GoldenNuggetView: View {
             try loadPairingFile(from: url)
         } catch {
             errorText = error.localizedDescription
-            GoldenNuggetEngine.shared.log("pairing file import failed (\(url.lastPathComponent)): "
+            GoldenNuggetEngine.shared.log("配对文件导入失败（\(url.lastPathComponent)）："
                 + "\(error.localizedDescription)")
         }
     }
@@ -914,10 +914,10 @@ struct GoldenNuggetView: View {
         defer { wirelessPair.reset() }
         do {
             try loadPairingFile(from: URL(fileURLWithPath: path))
-            GoldenNuggetEngine.shared.log("wireless pair: generated record adopted")
+            GoldenNuggetEngine.shared.log("无线配对：已采用生成的配对记录")
         } catch {
             errorText = error.localizedDescription
-            GoldenNuggetEngine.shared.log("wireless pair: generated record rejected — "
+            GoldenNuggetEngine.shared.log("无线配对：生成的配对记录被拒绝——"
                 + "\(error.localizedDescription)")
         }
     }
@@ -984,8 +984,8 @@ struct GoldenNuggetView: View {
                 read = await DeviceIdentity.read()
             }
             if read != .unknown {
-                GoldenNuggetEngine.shared.log("device identity: lockdownd answered on attempt "
-                    + "\(attempt + 1), after the first read raced minimuxer's start")
+                GoldenNuggetEngine.shared.log("设备标识：lockdownd 在第 "
+                    + "\(attempt + 1) 次尝试时响应（首次读取与 minimuxer 的启动产生了竞争）")
             }
         }
         readingDevice = false
@@ -1024,7 +1024,7 @@ struct GoldenNuggetView: View {
         running = true
         runStarted = Date()
         RunLog.shared.clear()
-        showStatus("Applying…", .accent, autoHide: false)
+        showStatus("正在应用…", .accent, autoHide: false)
         let snapshot = tweakSelection
         let wallpapers = posterBoardSelection
         let statusBar = statusBarSelection
@@ -1040,16 +1040,16 @@ struct GoldenNuggetView: View {
                                                                 statusBar: statusBar,
                                                                 deviceVersion: device.version,
                                                                 isIPhone: device.isIPhone)
-                text = "Applied. Reboot the device."
+                text = "已应用。请重启设备。"
                 tone = .success
                 succeeded = true
             } catch let failure as TransportFailure where failure.isCancellation {
                 // Stopping on purpose is not a failure — say so, and do not let it
                 // read like the device did something wrong. The engine has already
                 // written both of these into the log file.
-                text = "⏹ stopped by the user (\(failure.label))"
+                text = "⏹ 已由用户停止（\(failure.label)）"
                 tone = .warning
-                recordedError = "stopped by the user (\(failure.label))"
+                recordedError = "已由用户停止（\(failure.label)）"
             } catch {
                 text = "❌ \(error.localizedDescription)"
                 tone = .error
@@ -1102,9 +1102,9 @@ struct GoldenNuggetView: View {
     /// The percentage is the backup stage's own, which is the only stage that
     /// reports one.
     private func elapsedText(_ seconds: Int) -> String {
-        let clock = "Elapsed \(seconds / 60)m \(seconds % 60)s"
+        let clock = "已用 \(seconds / 60) 分 \(seconds % 60) 秒"
         guard let progress, !progress.isNaN else { return clock }
-        return "\(clock) · backup \(Int(progress))%"
+        return "\(clock) · 备份 \(Int(progress))%"
     }
 
     // MARK: - Connection
@@ -1125,7 +1125,7 @@ struct GoldenNuggetView: View {
         Self.startLock.lock()
         if Self.startInFlight {
             Self.startLock.unlock()
-            GoldenNuggetEngine.shared.log("minimuxer start already in progress — ignoring this request")
+            GoldenNuggetEngine.shared.log("minimuxer 启动已在进行中——忽略此请求")
             return
         }
         Self.startInFlight = true
@@ -1141,15 +1141,15 @@ struct GoldenNuggetView: View {
             // SideStore-style pre-start guard: the LocalDevVPN tunnel routes to
             // the emulated peer (10.7.0.1:62078). Probe the tunnel first so the
             // RSD adapter/handshake can reach the device before we start.
-            let tunnelStage = StageTimer("tunnel probe")
+            let tunnelStage = StageTimer("隧道探测")
             guard Tunnel.waitForTunnel(log: { line in GoldenNuggetEngine.shared.log(line) }) else {
-                tunnelStage.done("FAILED")
+                tunnelStage.done("失败")
                 DispatchQueue.main.async {
-                    errorText = "Tunnel not ready: \(Tunnel.peerIP):\(Tunnel.servicePort) unreachable.\n\n\(Tunnel.requirements)"
+                    errorText = "隧道尚未就绪：\(Tunnel.peerIP):\(Tunnel.servicePort) 无法连接。\n\n\(Tunnel.requirements)"
                 }
                 return
             }
-            tunnelStage.done("reachable")
+            tunnelStage.done("可达")
             Task {
                 do {
                     // FIRST, before setLogging()/start(): the Rust logger latches
@@ -1193,9 +1193,9 @@ struct GoldenNuggetView: View {
                     // `DispatchQueue.global` task while `View` is `@MainActor`,
                     // so it is the hop that keeps the call legal.
                     if let keys = await PairingRecord.topLevelKeys(pairingFileRaw) {
-                        GoldenNuggetEngine.shared.log("pairing file top-level keys: \(keys.isEmpty ? "(empty)" : keys.sorted().joined(separator: ", "))")
+                        GoldenNuggetEngine.shared.log("pairing file top-level keys: \(keys.isEmpty ? "（空）" : keys.sorted().joined(separator: ", "))")
                     } else {
-                        GoldenNuggetEngine.shared.log("pairing file: NOT a parseable plist")
+                        GoldenNuggetEngine.shared.log("配对文件：不是可解析的 plist")
                     }
                     try await minimuxer.core.start(pairingFile: pairingFileRaw, mountPath: docs)
                     // Readiness wait, deadline-bounded.  This used to be
@@ -1203,7 +1203,7 @@ struct GoldenNuggetView: View {
                     // every app launch with ALTPairingFile) paid up to 20 s
                     // before anything else could happen.  Poll fast at first,
                     // then back off, and stop at a hard deadline.
-                    let readyStage = StageTimer("minimuxer readiness")
+                    let readyStage = StageTimer("minimuxer 就绪检查")
                     var isReady = false
                     let deadline = Date().addingTimeInterval(20)
                     var poll = 0
@@ -1217,20 +1217,20 @@ struct GoldenNuggetView: View {
                         try await Task.sleep(nanoseconds: delay)
                         delay = min(delay * 2, 2_000_000_000)
                     }
-                    readyStage.done("ready=\(isReady) after \(poll) poll(s)")
-                    GoldenNuggetEngine.shared.log("minimuxer started. ready=\(isReady)")
+                    readyStage.done("就绪=\(isReady)，共轮询 \(poll) 次")
+                    GoldenNuggetEngine.shared.log("minimuxer 已启动。就绪=\(isReady)")
                     if !isReady {
                         let tail = RustLog.tail()
-                        GoldenNuggetEngine.shared.log("minimuxer.log tail:\n\(tail)")
+                        GoldenNuggetEngine.shared.log("minimuxer.log 末尾：\n\(tail)")
                         DispatchQueue.main.async {
-                            errorText = "minimuxer started but never became ready.\n\nLast minimuxer.log lines:\n\(tail)"
+                            errorText = "minimuxer 已启动但始终未就绪。\n\nminimuxer.log 最后几行：\n\(tail)"
                         }
                     }
                 } catch {
                     let tail = RustLog.tail()
-                    GoldenNuggetEngine.shared.log("minimuxer.log tail:\n\(tail)")
+                    GoldenNuggetEngine.shared.log("minimuxer.log 末尾：\n\(tail)")
                     DispatchQueue.main.async {
-                        errorText = "\(error.localizedDescription)\n\nLast minimuxer.log lines:\n\(tail)"
+                        errorText = "\(error.localizedDescription)\n\nminimuxer.log 最后几行：\n\(tail)"
                     }
                 }
             }

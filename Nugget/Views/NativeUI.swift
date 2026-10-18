@@ -202,7 +202,7 @@ struct NativeKeyboardDone: ViewModifier {
         content.toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
-                Button("Done") { Self.resignFirstResponder() }
+                Button("完成") { Self.resignFirstResponder() }
             }
         }
     }

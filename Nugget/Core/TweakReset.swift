@@ -28,10 +28,10 @@ enum ResetPage: String, CaseIterable, Identifiable, Sendable {
     /// is the string the reference's checkbox carries.
     var title: String {
         switch self {
-        case .statusBar: return "Status Bar"
-        case .springboard: return "Springboard"
-        case .internalOptions: return "Internal"
-        case .daemons: return "Daemons"
+        case .statusBar: return "状态栏"
+        case .springboard: return "主屏幕"
+        case .internalOptions: return "内部选项"
+        case .daemons: return "守护进程"
         }
     }
 
@@ -123,15 +123,15 @@ enum TweakReset {
     /// the log must not describe that as "not nulled".
     enum Kind: String, Sendable {
         /// 0 bytes, the iOS 26 null.
-        case zeroBytes = "0 bytes"
+        case zeroBytes = "0 字节"
         /// `plistlib.dumps({})`, the iOS 27 null.
-        case emptyPlist = "empty plist"
+        case emptyPlist = "空 plist"
         /// The stock six-key `disabled.plist`.
-        case stockDaemons = "stock daemons"
+        case stockDaemons = "系统默认守护进程"
         /// The zeroed classic status-bar struct (iOS 26).
-        case statusBarClassic = "fresh status bar struct"
+        case statusBarClassic = "全新状态栏结构"
         /// The archive that decodes as "no overrides" (iOS 27+).
-        case statusBarArchive = "reset status bar archive"
+        case statusBarArchive = "重置状态栏归档"
     }
 
     /// One file the reset will write.

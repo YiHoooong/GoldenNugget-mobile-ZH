@@ -123,7 +123,7 @@ struct RunLogCard: View {
 
     var body: some View {
         if !log.lines.isEmpty {
-            Section("Log") {
+            Section("日志") {
                 viewport
             }
         }
@@ -156,7 +156,7 @@ struct RunLogCard: View {
                         followsTail = true
                         proxy.scrollTo(Self.tail, anchor: .bottom)
                     } label: {
-                        Label("Latest", systemImage: "arrow.down.to.line.compact")
+                        Label("最新", systemImage: "arrow.down.to.line.compact")
                             .font(.caption2.bold())
                             .labelStyle(.titleAndIcon)
                             .padding(.horizontal, 10)

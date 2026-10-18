@@ -19,7 +19,7 @@ enum ProtectiveBackup {
         onProgress: ((Double) -> Void)? = nil
     ) async throws {
         let minimuxer = Minimuxer.shared()
-        AppLog.write("Creating protective backup (no photos/video) at \(backupRoot.path)…")
+        AppLog.write("正在创建保护性备份（不含照片/视频），位置：\(backupRoot.path)…")
 
         // The Rust delegate callbacks are the ONLY host-side window into the
         // mobilebackup2 conversation.  Counting what the device streamed and how
@@ -61,14 +61,14 @@ enum ProtectiveBackup {
                     if attempt == 1 {
                         try HostManifests.reset(backupRoot: backupRoot, udid: udid)
                     } else {
-                        AppLog.write("keeping the partial baseline from attempt \(attempt - 1) "
-                            + "(wiping it would force a full re-upload)")
+                        AppLog.write("保留第 \(attempt - 1) 次尝试的部分基线 "
+                            + "（清除它会强制完整重新上传）")
                     }
                     let dir = AppPaths.deviceDir(backupRoot: backupRoot, udid: udid)
                     try HostManifests.ensure(deviceDir: dir, udid: udid, isFullBackup: true)
                     try HostManifests.writeSQLiteManifest(deviceDir: dir, ios27: true)
-                    AppLog.write("host manifests ready: full backup, Manifest.db written "
-                        + "(\((dir.appendingPathComponent("Manifest.db")).path))")
+                    AppLog.write("主机清单已就绪：完整备份，已写入 Manifest.db "
+                        + "（路径：\((dir.appendingPathComponent("Manifest.db")).path)）")
                 }
             ) {
                 // 120 s of *nothing* — no host callback AND no DeviceLink message
@@ -105,7 +105,7 @@ enum ProtectiveBackup {
                             // thousands of lines, and the one that mattered
                             // ("progress: 2 %") scrolled away before the failure.
                             if let step = trace.noteProgress(overall) {
-                                AppLog.write("backup stream: \(step)% — \(trace.summary())")
+                                AppLog.write("备份数据流：\(step)% —— \(trace.summary())")
                                 onProgress?(overall)
                             }
                         },
@@ -128,7 +128,7 @@ enum ProtectiveBackup {
                 // Rust call's own teardown, the staging walk below, and the log
                 // line after it.  This line splits that window in half, so the
                 // next failure points at one side of it.
-                AppLog.write("backup call returned — device commit done, checking the staging tree…")
+                AppLog.write("备份调用已返回 —— 设备提交完成，正在检查暂存目录树…")
                 reportStagingLeftovers(backupRoot: backupRoot, udid: udid)
             }
             // A backup that kept nothing is not a successful backup. The pull
@@ -151,27 +151,27 @@ enum ProtectiveBackup {
                 //                The sample lines below are then the only record
                 //                of what the device actually called its domains.
                 let cause = trace.total == 0
-                    ? "the host keep-filter callback was never called, so the device streamed nothing to judge — the filter is not the problem, the iOS 27 transfer shape is"
-                    : "the keep-filter rejected all \(trace.total) name(s) the device used"
-                AppLog.write("protective backup kept 0 of \(trace.total) file(s) — \(cause)")
-                AppLog.write("domains: \(trace.domainSummary())")
+                    ? "主机的保留过滤回调从未被调用，因此设备没有推送任何可供判断的内容 —— 问题不在过滤器，而是 iOS 27 的传输形态"
+                    : "保留过滤器拒绝了设备使用的全部 \(trace.total) 个名称"
+                AppLog.write("保护性备份在 \(trace.total) 个文件中保留了 0 个 —— \(cause)")
+                AppLog.write("域：\(trace.domainSummary())")
                 for line in trace.sampleLines() { AppLog.write(line) }
                 if trace.total == 0 {
-                    AppLog.write("Rust log tail, to see what the device did stream:")
+                    AppLog.write("Rust 日志尾部，用于查看设备实际推送了什么：")
                     AppLog.write(RustLog.excerpt())
                 }
                 beat.stop()
-                stage.done("FAILED — kept 0 files")
-                throw GoldenNuggetError("Protective backup kept no files: \(cause). "
-                    + "Domains: \(trace.domainSummary())")
+                stage.done("失败 —— 未保留任何文件")
+                throw GoldenNuggetError("保护性备份未保留任何文件：\(cause)。"
+                    + "域：\(trace.domainSummary())")
             }
-            AppLog.write("protective backup finished — \(trace.summary())")
+            AppLog.write("保护性备份完成 —— \(trace.summary())")
             beat.stop()
             stage.done(trace.summary())
         } catch {
             beat.stop()
-            stage.done("FAILED — \(trace.summary())")
-            AppLog.write("protective backup FAILED — \(trace.summary())")
+            stage.done("失败 —— \(trace.summary())")
+            AppLog.write("保护性备份失败 —— \(trace.summary())")
             for line in trace.sampleLines() { AppLog.write(line) }
             // The Rust side is the only place that knows WHY the flow died, and
             // every candidate has its own literal: RST (device reset), "timed
@@ -183,9 +183,9 @@ enum ProtectiveBackup {
             // per-port sender when the connection is torn down, so a DEVICE-SIDE
             // close and a local pump failure look identical here.  It therefore
             // cannot be read as "the device refused us".
-            AppLog.write("note: \"channel closed\" is jktcp's generic flow-closed report — it does not "
-                + "distinguish a device-side teardown from a local stack failure. See minimuxer.log "
-                + "(Rust, DEBUG) for the real step.")
+            AppLog.write("注意：“channel closed”是 jktcp 的通用流关闭报告 —— 它无法"
+                + "区分设备侧断开与本地栈故障。真正的步骤请查看 minimuxer.log "
+                + "（Rust 的 DEBUG 日志）。")
             throw error
         }
     }
@@ -204,7 +204,7 @@ enum ProtectiveBackup {
             .appendingPathComponent("Snapshot")
         let fm = FileManager.default
         guard fm.fileExists(atPath: snapshot.path) else {
-            AppLog.write("staging: no Snapshot/ tree was left behind — the device drained it")
+            AppLog.write("暂存区：未留下 Snapshot/ 目录树 —— 设备已将其清空")
             return
         }
         var files = 0
@@ -218,12 +218,12 @@ enum ProtectiveBackup {
             }
         }
         if files == 0 {
-            AppLog.write("staging: Snapshot/ still exists but holds no files (\(dirs) empty dirs) — "
-                + "every staged payload landed")
+            AppLog.write("暂存区：Snapshot/ 仍然存在，但没有任何文件（\(dirs) 个空目录）—— "
+                + "所有暂存的载荷均已落盘")
         } else {
-            AppLog.write("staging: ⚠️ \(files) file(s) left under Snapshot/ (\(dirs) dirs) — staged but "
-                + "never committed. Filtered payloads are expected here; if the prune does not "
-                + "account for them the restore will fail.")
+            AppLog.write("暂存区：⚠️ Snapshot/ 下仍留有 \(files) 个文件（\(dirs) 个目录）—— 已暂存但 "
+                + "从未提交。此处出现被过滤的载荷属于预期；如果清理阶段不"
+                + "把它们计算在内，恢复将会失败。")
         }
     }
 }

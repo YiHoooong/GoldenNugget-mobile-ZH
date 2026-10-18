@@ -79,11 +79,11 @@ enum PosterBoardBackup {
         //    the entry's shape is the device's contract, and the reference's own
         //    fallbacks (`ApplicationSINF` → b"", `iTunesMetadata` → {}) are only
         //    correct for a record the device produced.
-        log("PosterBoard: asking the device for the \(PosterBoard.bundleID) container…")
+        log("海报板：正在向设备请求 \(PosterBoard.bundleID) 容器…")
         let entry = try await Minimuxer.shared().appFactoryEntry(bundleId: PosterBoard.bundleID)
         let container = entry["Container"] as? String ?? ""
-        log("PosterBoard: container \(container.isEmpty ? "<not reported>" : container) — "
-            + "\(entry.keys.count) field(s) from the device's own record: "
+        log("海报板：容器 \(container.isEmpty ? "<未上报>" : container) —— "
+            + "\(entry.keys.count) 个字段，来自设备自身记录："
             + "\(entry.keys.sorted().joined(separator: ", "))")
         // `Container` is the knob itself. Without it the device has nothing to
         // upload, and the only thing a backup would then produce is the host's
@@ -92,11 +92,11 @@ enum PosterBoardBackup {
         // about a second, and this is the one precondition worth asserting.
         guard !container.isEmpty else {
             throw GoldenNuggetError(
-                "The device's own record for \(PosterBoard.bundleID) carries no Container, so "
-                + "there is nothing for a backup to upload. Fields it did return: "
-                + "\(entry.keys.sorted().joined(separator: ", ")). The entry is forwarded "
-                + "verbatim from installation_proxy — it is not composed here — so this is the "
-                + "device declining to name the container, not a malformed request.")
+                "设备自身关于 \(PosterBoard.bundleID) 的记录没有 Container，因此 "
+                + "备份没有可上传的内容。它返回的字段有："
+                + "\(entry.keys.sorted().joined(separator: ", ")). 该条目是原样"
+                + "由 installation_proxy 转来 —— 这里没有自行组装 —— 因此这是"
+                + "设备拒绝命名容器，而不是请求格式有问题。")
         }
 
         // 2. Host-side metadata. `isFullBackup: true` is the same marker the
@@ -155,16 +155,16 @@ enum PosterBoardBackup {
             },
             onProgress: { overall in
                 if let step = counter.noteProgress(overall) {
-                    log("PosterBoard backup stream: \(step)% — \(counter.summary)")
+                    log("海报板备份流：\(step)% —— \(counter.summary)")
                 }
                 onProgress?(overall)
             },
             delegateLog: { line in AppLog.write(line) }
         )
-        log("PosterBoard: backup done — \(counter.summary)")
+        log("海报板：备份完成 —— \(counter.summary)")
         // Logged on every run, not only on failure: the first few offers are the
         // only record of which string this device's stream carries the path in.
-        log("PosterBoard: offers — \(counter.sample())")
+        log("海报板：提供的文件 —— \(counter.sample())")
         // The store itself has to have come through — metadata alone is not a result.
         // The first version accepted any kept file at all, so a run that carried nothing
         // but `Status.plist` went on to fail several stages later, deep in the manifest
@@ -172,17 +172,17 @@ enum PosterBoardBackup {
         // and they are right here.
         guard counter.posterBoardKept > 0 else {
             throw GoldenNuggetError(
-                "The device uploaded nothing for \(PosterBoard.bundleID): \(counter.kept) of "
-                + "\(counter.total) offered file(s) went through the keep-filter and not one of "
-                + "them was \(PosterBoard.databaseFileName). Either the container was never "
-                + "offered — the factory info it was handed did not name it, or the device "
-                + "declined — or it was offered under a name the filter did not recognise; the "
-                + "names below tell the two apart. Offers: \(counter.sample()). "
-                + "(A kept count that is exactly the host's metadata set — Info.plist, "
-                + "Manifest.plist, Status.plist, Manifest.db and its -shm/-wal — means the "
-                + "filter matched nothing the device streamed, not that the device sent "
-                + "nothing: check whether the names being matched are the device's or the "
-                + "host's.)")
+                "设备未上传任何 \(PosterBoard.bundleID) 的内容：\(counter.kept) 个保留，共 "
+                + "\(counter.total) 个提供文件通过了保留过滤器，但其中没有一个 "
+                + "是 \(PosterBoard.databaseFileName)。可能容器从未被"
+                + "提供 —— 传给它的工厂信息未点名它，或设备"
+                + "拒绝 —— 也可能以过滤器不识别的名称提供；"
+                + "下面的名称可以区分这两种情况。提供记录：\(counter.sample())。"
+                + "（保留数恰好等于主机的元数据集 —— Info.plist、"
+                + "Manifest.plist、Status.plist、Manifest.db 及其 -shm/-wal —— 意味着 "
+                + "过滤器没有匹配到设备推送的任何内容，而不是设备什么都没发："
+                + "请检查所匹配的名称来自设备还是"
+                + "主机。）")
         }
 
         // 4. Pull it out, merge the WAL, and hand back the version it was found
@@ -200,12 +200,12 @@ enum PosterBoardBackup {
         // above, which left the copy and the validation as the two candidates
         // and nothing to tell them apart.
         if let complaint = PosterBoardStore.diagnose(consolidated, strict: false) {
-            log("PosterBoard: the fetched database was rejected — \(complaint). Tables: "
+            log("海报板：抓取到的数据库被拒绝 —— \(complaint)。表："
                 + "\(PosterBoardStore.describeTables(consolidated)).")
-            throw GoldenNuggetError("The PosterBoard database fetched from the device did not "
-                + "validate (\(complaint)). Fetch it again.")
+            throw GoldenNuggetError("从设备抓取的海报板数据库未通过 "
+                + "校验（\(complaint)）。请重新抓取。")
         }
-        log("PosterBoard: database ready — \(extracted.locatedBy), structure version "
+        log("海报板：数据库就绪 —— \(extracted.locatedBy)，结构版本 "
             + "\(extracted.structureVersion), "
             + ByteCountFormatter.string(fromByteCount: fileSize(consolidated), countStyle: .file))
         return Result(database: consolidated,
@@ -260,44 +260,44 @@ enum PosterBoardBackup {
                 $0.relativePath.hasSuffix(PosterBoard.databaseFileName)
             }) {
                 guard let payload = candidate.payload else {
-                    throw GoldenNuggetError("The manifest lists \(candidate.relativePath) but its "
-                        + "payload is not on disk — the mid-stream filter dropped it.")
+                    throw GoldenNuggetError("清单列出了 \(candidate.relativePath)，但它的 "
+                        + "载荷不在磁盘上 —— 中途过滤器把它丢掉了。")
                 }
                 let wal = rows.first { $0.relativePath == candidate.relativePath + "-wal" }?.payload
-                log("PosterBoard: found \(candidate.relativePath) "
-                    + "(fileID \(candidate.fileID.prefix(12))…"
-                    + (wal == nil ? ", no WAL companion)" : ", with a WAL companion)"))
+                log("海报板：已找到 \(candidate.relativePath) "
+                    + "（文件 ID \(candidate.fileID.prefix(12))…"
+                    + (wal == nil ? "，没有 WAL 伴随文件）" : "，带有 WAL 伴随文件）"))
                 return Extracted(main: payload, wal: wal,
-                                 locatedBy: "manifest row \(candidate.relativePath)",
+                                 locatedBy: "清单行 \(candidate.relativePath)",
                                  structureVersion: structureVersion(of: deviceName
                                                                     ?? candidate.relativePath))
             }
             manifestTrouble = rows.isEmpty
-                ? "the manifest carries no row mentioning \(PosterBoard.databaseFileName)"
-                : "the manifest has \(rows.count) matching row(s) but none is the store itself"
+                ? "清单中没有提到 \(PosterBoard.databaseFileName) 的行"
+                : "清单有 \(rows.count) 个匹配行，但没有一个是存储本身"
         } catch {
             manifestTrouble = error.localizedDescription
         }
 
         // ② the fallback: whatever is actually in the shard tree
-        log("PosterBoard: the manifest did not resolve the store (\(manifestTrouble ?? "unknown") "
-            + "— scanning the \(store.payloadFiles().count) payload(s) on disk by content")
+        log("海报板：清单未能解析出存储（\(manifestTrouble ?? "未知") "
+            + "—— 正在按内容扫描磁盘上的 \(store.payloadFiles().count) 个载荷")
         if let scanned = scanForStore(in: store) {
-            log("PosterBoard: found the store by content \(scanned.locatedBy)")
+            log("海报板：已按内容找到存储 \(scanned.locatedBy)")
             return Extracted(main: scanned.main, wal: scanned.wal,
                              locatedBy: scanned.locatedBy,
                              structureVersion: structureVersion(of: deviceName ?? scanned.locatedBy))
         }
 
         throw GoldenNuggetError(
-            "The fetched backup does not hold the PosterBoard store. \(manifestTrouble ?? "") "
-            + "Manifest.db tables: \(store.tableNames.isEmpty ? "none" : store.tableNames.joined(separator: ", ")). "
-            + "Payloads on disk: \(store.payloadFiles().map(\.lastPathComponent).prefix(10).joined(separator: ", ")). "
+            "抓取的备份中不包含海报板存储。\(manifestTrouble ?? "") "
+            + "Manifest.db 表：\(store.tableNames.isEmpty ? "无" : store.tableNames.joined(separator: ", ")). "
+            + "磁盘上的载荷：\(store.payloadFiles().map(\.lastPathComponent).prefix(10).joined(separator: ", ")). "
             + (store.tableNames.contains("ManifestEntry")
-               ? "Those tables are the host-written placeholder — the device never uploaded its "
-                 + "own Manifest.db, which happens when it does not take the container it was "
-                 + "asked for."
-               : "No payload is a PosterBoard database."))
+               ? "这些表是主机写入的占位符 —— 设备从未上传它自己的 "
+                 + "Manifest.db。这发生在设备不接受所请求的 "
+                 + "容器时。"
+               : "没有任何载荷是海报板数据库。"))
     }
 
     /// The store found by reading the payloads, with the WAL paired only when exactly one
@@ -311,8 +311,8 @@ enum PosterBoardBackup {
         guard let main = stores.first else { return nil }
         let wals = payloads.filter(isSQLiteWAL)
         let wal = stores.count == 1 && wals.count == 1 ? wals[0] : nil
-        return (main, wal, "shard scan (fileID \(main.lastPathComponent.prefix(12))…, "
-                + "\(stores.count) store(s) and \(wals.count) WAL candidate(s) found)")
+        return (main, wal, "分片扫描（文件 ID \(main.lastPathComponent.prefix(12))…， "
+                + "找到 \(stores.count) 个存储、\(wals.count) 个 WAL 候选）")
     }
 
     /// Whether a payload is a SQLite database carrying the store's own marker table.
@@ -383,9 +383,9 @@ enum PosterBoardBackup {
             do {
                 try fm.copyItem(at: main, to: destination)
             } catch {
-                log("PosterBoard: copying the store onto the cache failed — "
-                    + "\(error.localizedDescription) (from \(main.lastPathComponent), "
-                    + "\(fileSize(main)) bytes, onto \(destination.path))")
+                log("海报板：将存储复制到缓存失败 —— "
+                    + "\(error.localizedDescription)（来源 \(main.lastPathComponent)，"
+                    + "\(fileSize(main)) 字节，目标 \(destination.path)）")
                 throw error
             }
             return destination
@@ -400,20 +400,20 @@ enum PosterBoardBackup {
             try fm.copyItem(at: main, to: scratch)
             try fm.copyItem(at: wal, to: URL(fileURLWithPath: scratch.path + "-wal"))
         } catch {
-            log("PosterBoard: staging the store and its WAL failed — "
-                + "\(error.localizedDescription) (store \(fileSize(main)) bytes, "
-                + "WAL \(fileSize(wal)) bytes, in \(work.lastPathComponent))")
+            log("海报板：暂存存储及其 WAL 失败 —— "
+                + "\(error.localizedDescription)（存储 \(fileSize(main)) 字节，"
+                + "WAL \(fileSize(wal)) 字节，位于 \(work.lastPathComponent)）")
             throw error
         }
 
         let folded = fold(source: scratch, into: destination)
         if !folded || !PosterBoardStore.validate(destination, strict: false) {
             let reason = folded
-                ? (PosterBoardStore.diagnose(destination, strict: false) ?? "validation failed")
-                : "the backup API refused"
-            log("PosterBoard: WAL consolidation did not produce a healthy database "
-                + "(\(reason)) — using the plain file, which is what the reference falls "
-                + "back to as well")
+                ? (PosterBoardStore.diagnose(destination, strict: false) ?? "校验失败")
+                : "备份 API 拒绝"
+            log("海报板：WAL 合并未能生成健康的数据库 "
+                + "（\(reason)）—— 改用普通文件，这与参考实现的回退行为一致"
+                + "，都是如此")
             try? fm.removeItem(at: destination)
             try fm.copyItem(at: main, to: destination)
         }
@@ -513,15 +513,15 @@ private final class Counter: @unchecked Sendable {
     var summary: String {
         lock.lock()
         defer { lock.unlock() }
-        return "\(_kept) kept of \(_total) offered"
+        return "\(_kept) 个保留 / 共 \(_total) 个提供"
     }
 
     func sample() -> String {
         lock.lock()
         defer { lock.unlock() }
         let poster = _posterBoardOffers.isEmpty
-            ? "no name mentioning PosterBoard"
+            ? "没有提及 PosterBoard 的名称"
             : _posterBoardOffers.joined(separator: " | ")
-        return _samples.joined(separator: " | ") + " // posterboard-ish: " + poster
+        return _samples.joined(separator: " | ") + " // 类似 PosterBoard 的：" + poster
     }
 }

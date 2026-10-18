@@ -20,7 +20,7 @@ struct TweakConflict: Equatable, Identifiable {
         func title(_ id: String) -> String {
             TweakCatalog.byID[id]?.title ?? id
         }
-        return "\(title(first)) + \(title(second)): \(reason)"
+        return "\(title(first))与\(title(second))：\(reason)"
     }
 }
 
@@ -79,7 +79,7 @@ enum TweakConflicts {
                     // `payload != old` with a None on either side: a nullified
                     // file colliding with real contents.  Both None is equal.
                     if payload != nil || priorPayload != nil {
-                        reason = "One tweak clears a preferences file used by the other."
+                        reason = "一个调整项清除了另一个调整项正在使用的偏好设置文件。"
                     }
                 } else if let p = payload, let o = priorPayload {
                     // Shared keys written with different values win the report;
@@ -87,9 +87,9 @@ enum TweakConflicts {
                     // tweak set is the "replaces" case.
                     let shared = Set(o.keys).intersection(p.keys)
                     if shared.contains(where: { !plistValueEquals(o[$0]! as Any, p[$0]! as Any) }) {
-                        reason = "They write different values to the same setting."
+                        reason = "两者向同一设置写入了不同的值。"
                     } else if spec.writesWholeDict, !Set(o.keys).subtracting(p.keys).isEmpty {
-                        reason = "The later tweak replaces settings written by the earlier one."
+                        reason = "后一个调整项覆盖了前一个调整项写入的设置。"
                     }
                 }
                 if let reason { conflicts.append(TweakConflict(first: prior.id, second: spec.id, reason: reason)) }
@@ -104,7 +104,7 @@ enum TweakConflicts {
            selection.value(for: rtl).isTruthy, selection.value(for: ltr).isTruthy {
             conflicts.append(TweakConflict(
                 first: rtl.id, second: ltr.id,
-                reason: "Both layout directions are forced at the same time. Select only one."))
+                reason: "同时强制了两个布局方向。请只选择其中一个。"))
         }
         return conflicts
     }

@@ -45,7 +45,7 @@ enum RustLog {
         // one's (a stale count would make the stall guard's crawl verdict look
         // satisfied before the tunnel has sent a single byte).
         WireCensus.shared.reset(from: offset)
-        AppLog.write("rust log mark: byte \(offset) (excerpts from here cover only this run)")
+        AppLog.write("Rust 日志标记：第 \(offset) 字节（此后的摘录只覆盖本次运行）")
         return offset
     }
 
@@ -66,19 +66,19 @@ enum RustLog {
     /// says whether that is fixable), a 0-byte file (sink armed, the device has
     /// simply not produced a Rust line yet), and real bytes.
     static func status() -> String {
-        let rc = initResult.map { String(describing: $0) } ?? "not called"
+        let rc = initResult.map { String(describing: $0) } ?? "未调用"
         let bytes = size()
         let state: String
         if !fileExists {
             let parent = url.deletingLastPathComponent()
             let parentExists = FileManager.default.fileExists(atPath: parent.path)
-            state = "no file at \(url.path) (parent dir exists=\(parentExists))"
+            state = "无文件：\(url.path)（父目录存在=\(parentExists)）"
         } else if bytes == 0 {
-            state = "0 B — sink armed, no Rust output yet"
+            state = "0 B —— 已就绪，尚无 Rust 输出"
         } else {
             state = "\(bytes) B"
         }
-        return "minimuxer.log: init rc=\(rc), \(state)"
+        return "minimuxer.log：初始化 rc=\(rc)，\(state)"
     }
 
     // MARK: - Keyword sets
@@ -166,12 +166,12 @@ enum RustLog {
         // Read the whole file then drop the prefix: FileHandle's read-to-end API
         // was renamed in the iOS 27 SDK, and this log is a few hundred KB.
         guard let whole = try? Data(contentsOf: url) else {
-            return "  (no readable minimuxer.log at \(url.path))"
+            return "  （无法读取 minimuxer.log：\(url.path)）"
         }
         let from = Int(min(offset ?? 0, UInt64(whole.count)))
         let data = whole.dropFirst(from)
         guard let text = String(data: data, encoding: .utf8) else {
-            return "  (minimuxer.log unreadable from byte \(from))"
+            return "  （minimuxer.log 从第 \(from) 字节起不可读）"
         }
 
         let lines = text.split(separator: "\n", omittingEmptySubsequences: true)
@@ -181,9 +181,9 @@ enum RustLog {
             return lowered.contains { low.contains($0) }
         }
 
-        var out = "  rust log excerpt"
-        if offset != nil { out += " after byte \(from)" }
-        out += ": \(lines.count) new lines, \(hits.count) match protocol/flow keywords"
+        var out = "  Rust 日志摘录"
+        if offset != nil { out += "（第 \(from) 字节之后）" }
+        out += "：共 \(lines.count) 行新日志，\(hits.count) 行匹配协议/流关键字"
         out += "\n" + messageHistogram(lines)
         // The DL census says whether the *protocol* moved; this says whether the
         // *tunnel* was delivering. They are different failures with the same
@@ -192,7 +192,7 @@ enum RustLog {
         // not hand up, and "device→host: none" alone reads like a dead device.
         out += "\n" + WireCensus.transportLine(lines)
         guard !hits.isEmpty else {
-            return out + "\n  (nothing matched — the Rust log never reached the mobilebackup2 or jktcp layer)"
+            return out + "\n  （无匹配 —— Rust 日志从未到达 mobilebackup2 或 jktcp 层）"
         }
         if hits.count <= maxLines {
             return out + "\n" + hits.map { "  | \($0)" }.joined(separator: "\n")
@@ -204,7 +204,7 @@ enum RustLog {
         let head = hits.prefix(headCount).map { "  | \($0)" }
         let tail = hits.suffix(tailCount).map { "  | \($0)" }
         return out + "\n" + (head
-            + ["  | … \(omitted) matching lines omitted …"]
+            + ["  | … 省略了 \(omitted) 行匹配内容 …"]
             + tail).joined(separator: "\n")
     }
 
@@ -232,8 +232,8 @@ enum RustLog {
             .prefix(6).map { "\($0.key)×\($0.value)" }.joined(separator: " ")
         let hostSays = sent.sorted { ($0.value, $1.key) > ($1.value, $0.key) }
             .prefix(6).map { "\($0.key)×\($0.value)" }.joined(separator: " ")
-        return "  DL census — device→host: \(deviceSays.isEmpty ? "none" : deviceSays)"
-            + " ; host→device: \(hostSays.isEmpty ? "none" : hostSays)"
+        return "  DL 统计 —— 设备→主机：\(deviceSays.isEmpty ? "无" : deviceSays)"
+            + "；主机→设备：\(hostSays.isEmpty ? "无" : hostSays)"
     }
 
     /// Raw tail, used to prove the sink is live and to show an unclassified
@@ -243,11 +243,11 @@ enum RustLog {
     ///   confines it to the current run).  nil = whole file.
     static func tail(_ count: Int = 30, since: UInt64? = nil) -> String {
         guard let whole = try? Data(contentsOf: url) else {
-            return "(no minimuxer.log at \(url.path))"
+            return "（没有 minimuxer.log：\(url.path)）"
         }
         let from = Int(min(since ?? 0, UInt64(whole.count)))
         guard let text = String(data: whole.dropFirst(from), encoding: .utf8) else {
-            return "(minimuxer.log unreadable from byte \(from))"
+            return "（minimuxer.log 从第 \(from) 字节起不可读）"
         }
         return text.split(separator: "\n").suffix(count).joined(separator: "\n")
     }

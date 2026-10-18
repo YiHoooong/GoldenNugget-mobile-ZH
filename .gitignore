@@ -64,3 +64,4 @@ RELEASE_NOTES*.md
 .vscode
 .zed
 tasks.md
+.translation/

@@ -63,42 +63,42 @@ struct MediaView: View {
         // those are gone: the sidebar is the only way in and it pushes like
         // everything else, so this page gets the same bar as the rest — title
         // included, which it never had.
-        .navigationTitle("Media")
+        .navigationTitle("媒体")
         // Compact widths only -- on a tablet the split view draws its own sidebar
         // toggle, and a second button beside it is the duplicate-controls mess.
         .goldenSidebarButton()
         .navigationBarTitleDisplayMode(.inline)
         .confirmationDialog(
-            "Remove \(survey?.files.count ?? 0) original(s) after copying?",
+            "复制后删除 \(survey?.files.count ?? 0) 个原始文件？",
             isPresented: $confirmPull, titleVisibility: .visible
         ) {
-            Button("Copy and remove originals", role: .destructive) { Task { await doPull() } }
-            Button("Cancel", role: .cancel) {}
+            Button("复制并删除原始文件", role: .destructive) { Task { await doPull() } }
+            Button("取消", role: .cancel) {}
         } message: {
-            Text("\(bytes(survey?.bytes ?? 0)) will be moved into this app's container. "
-                + "Free space there: \(bytes(free)). Once removed, the copy in the "
-                + "container is the only one -- and the container is deleted if the "
-                + "app is.")
+            Text("\(bytes(survey?.bytes ?? 0)) 将被移入本应用的容器。"
+                + "该处可用空间：\(bytes(free))。一旦删除，"
+                + "容器中的副本就是唯一副本——而且如果删除本应用，"
+                + "容器也会一并删除。")
         }
     }
 
     private var mediaSection: some View {
-        Section("AFC media") {
-            NativeNote("Copies \(AfcMediaBackup.trees.joined(separator: " and ")) "
-                + "from the device's Media root over AFC into this app's container. "
-                + "Needs no photo-library permission.")
+        Section("AFC 媒体") {
+            NativeNote("将 \(AfcMediaBackup.trees.joined(separator: "、")) "
+                + "从设备的 Media 根目录经 AFC 复制到本应用的容器。"
+                + "无需照片图库权限。")
             surveyRows
             deleteSwitch
             Button {
                 Task { await pull() }
             } label: {
-                Label("Pull media", systemImage: "arrow.down.doc")
+                Label("拉取媒体", systemImage: "arrow.down.doc")
             }
             .disabled(busy)
             Button {
                 Task { await push() }
             } label: {
-                Label("Push back to device", systemImage: "arrow.up.doc")
+                Label("推送回设备", systemImage: "arrow.up.doc")
             }
             .disabled(busy || !hasStoredFiles)
             // Was `try?` with a success message printed either way, so a failure
@@ -110,15 +110,15 @@ struct MediaView: View {
                     await run {
                         try AfcMediaBackup.clear()
                         loadManifest()
-                        lines.append("Local media store emptied.")
+                        lines.append("本地媒体存储已清空。")
                     }
                 }
             } label: {
-                Label("Empty the local store", systemImage: "trash")
+                Label("清空本地存储", systemImage: "trash")
             }
             .disabled(busy || !hasStoredFiles)
-            NativeSafetyNote("Emptying the store is only safe once the originals are "
-                + "back on the device and verified there.")
+            NativeSafetyNote("只有在原始文件已回到设备并通过校验之后，"
+                + "才能安全地清空存储。")
         }
     }
 
@@ -126,19 +126,19 @@ struct MediaView: View {
     private var surveyRows: some View {
         if let survey {
             VStack(alignment: .leading, spacing: 4) {
-                Text("\(survey.files.count) file(s), \(bytes(survey.bytes))"
-                    + (survey.skippedSymlinks > 0 ? ", \(survey.skippedSymlinks) symlink(s) skipped" : ""))
+                Text("\(survey.files.count) 个文件，\(bytes(survey.bytes))"
+                    + (survey.skippedSymlinks > 0 ? "，\(survey.skippedSymlinks) 个符号链接已跳过" : ""))
                     .font(.body)
-                NativeNote("Free in the container: \(bytes(free)).")
+                NativeNote("容器可用空间：\(bytes(free))。")
             }
         } else {
-            Text("Not surveyed")
+            Text("尚未扫描")
                 .foregroundStyle(.secondary)
         }
         Button {
             Task { await runSurvey() }
         } label: {
-            Label("Survey", systemImage: "magnifyingglass")
+            Label("扫描", systemImage: "magnifyingglass")
         }
         .disabled(busy)
     }
@@ -146,17 +146,17 @@ struct MediaView: View {
     private var deleteSwitch: some View {
         VStack(alignment: .leading, spacing: 2) {
             Toggle(isOn: $deleteOriginals) {
-                Text("Delete originals after copy")
+                Text("复制后删除原始文件")
                     .foregroundStyle(deleteOriginals ? Color.red : Color.primary)
             }
             NativeNote(deleteOriginals
-                ? "Each original is removed only after its copy's size is verified."
-                : "Off: copies are made and the originals stay put.")
+                ? "只有在副本大小通过校验后，才会删除对应的原始文件。"
+                : "关闭：仅创建副本，原始文件保留在原处。")
         }
     }
 
     private var logSection: some View {
-        Section("Log") {
+        Section("日志") {
             ForEach(lines.suffix(40), id: \.self) { line in
                 Text(line)
                     .font(.caption.monospaced())
@@ -166,7 +166,7 @@ struct MediaView: View {
     }
 
     private func errorSection(_ error: String) -> some View {
-        Section("Failed") {
+        Section("失败") {
             NativeSafetyNote(error)
         }
     }
@@ -177,7 +177,7 @@ struct MediaView: View {
         await run {
             let s = try await AfcMediaBackup.survey()
             survey = s
-            lines = ["Survey: \(s.files.count) file(s), \(bytes(s.bytes))."]
+            lines = ["扫描：\(s.files.count) 个文件，\(bytes(s.bytes))。"]
         }
     }
 
@@ -196,7 +196,7 @@ struct MediaView: View {
             // recomputed here — `loadManifest()` is not called on this path.
             hasStoredFiles = storeHasFiles()
             let removed = m.entries.filter(\.deleted).count
-            lines.append("Pulled \(m.entries.count) file(s); \(removed) original(s) removed.")
+            lines.append("已拉取 \(m.entries.count) 个文件；已删除 \(removed) 个原始文件。")
         }
     }
 

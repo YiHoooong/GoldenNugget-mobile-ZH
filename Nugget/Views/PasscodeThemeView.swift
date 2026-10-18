@@ -37,7 +37,7 @@ struct PasscodeThemeView: View {
             if !log.isEmpty { runLog }
         }
         .listStyle(.insetGrouped)
-        .navigationTitle("Passcode")
+        .navigationTitle("密码")
         .navigationBarTitleDisplayMode(.inline)
         .task { identity = await DeviceIdentity.read() }
         .fileImporter(isPresented: $showImporter, allowedContentTypes: [.data]) { result in
@@ -49,7 +49,7 @@ struct PasscodeThemeView: View {
         let reason = Airlift.unsupportedReason(deviceVersion: identity.version)
         if !reason.isEmpty { return reason }
         if !FileManager.default.fileExists(atPath: AppPaths.pairingFile.path) {
-            return "AirLift needs a pairing record and none is stored. Import one on the home page."
+            return "AirLift 需要配对记录，但目前尚未存储。请在主页导入一个。"
         }
         return ""
     }
@@ -60,9 +60,9 @@ struct PasscodeThemeView: View {
         Section {
             Text(identity.describe)
                 .font(.headline)
-            NativeNote("The keypad's artwork is written into "
-                + "/var/mobile/Library/Caches/TelephonyUI-…, which is a cache rather than a "
-                + "preference, so a backup cannot carry it. Lock the device to see the result.")
+            NativeNote("键盘的外观文件会写入 "
+                + "/var/mobile/Library/Caches/TelephonyUI-…，它属于缓存而非"
+                + "偏好设置，因此备份无法携带它。锁定设备即可查看效果。")
             if !blocker.isEmpty { NativeSafetyNote(blocker) }
         }
     }
@@ -72,18 +72,18 @@ struct PasscodeThemeView: View {
             Button {
                 showImporter = true
             } label: {
-                Label(theme == nil ? "Import a .passthm" : "Import another",
+                Label(theme == nil ? "导入 .passthm" : "再导入一个",
                       systemImage: "square.and.arrow.down")
             }
             if let theme {
-                NativeNote("\(theme.name) — \(theme.fileCount) file(s), "
-                    + "\(theme.keysPreview.count) key(s) found.")
+                NativeNote("\(theme.name) — \(theme.fileCount) 个文件，"
+                    + "找到 \(theme.keysPreview.count) 个按键。")
             }
         }
     }
 
     private func previewSection(_ theme: PasscodeThemeInfo) -> some View {
-        Section("Keys") {
+        Section("按键") {
             ForEach(0..<4, id: \.self) { row in
                 HStack(spacing: 8) {
                     ForEach(0..<3, id: \.self) { column in
@@ -118,12 +118,12 @@ struct PasscodeThemeView: View {
 
     private var optionsSection: some View {
         Section {
-            optionRow(title: "Language", selection: $language, choices: PasscodeLanguageTarget.allCases)
-            optionRow(title: "Weight", selection: $weight, choices: PasscodeBoldTarget.allCases)
-            NativeNote("The device asks for one file per locale, weight and key "
-                + "subtext. \"All languages\" writes every variant — it is the only setting that "
-                + "works on a device whose language you do not know — while the device's own "
-                + "locale and the fallback are always included either way.")
+            optionRow(title: "语言", selection: $language, choices: PasscodeLanguageTarget.allCases)
+            optionRow(title: "字重", selection: $weight, choices: PasscodeBoldTarget.allCases)
+            NativeNote("设备会为每种语言、字重和按键"
+                + "副文本各索取一个文件。“所有语言”会写入所有变体——这是唯一"
+                + "在你不了解设备语言时也能生效的设置；而设备自身的"
+                + "语言区域和回退项在任一种设置下都会包含。")
         }
     }
 
@@ -139,8 +139,19 @@ struct PasscodeThemeView: View {
     ) -> some View where Option.RawValue == String, Option.ID == String {
         Picker(title, selection: selection) {
             ForEach(choices) { option in
-                Text(option.id).tag(option)
+                Text(optionTitle(option)).tag(option)
             }
+        }
+    }
+
+    /// The picker shows the localized display name; `id`/`rawValue` stay the
+    /// stable identifiers the theme writer matches on.
+    private func optionTitle<Option: RawRepresentable>(_ option: Option) -> String
+    where Option.RawValue == String {
+        switch option {
+        case let language as PasscodeLanguageTarget: return language.title
+        case let weight as PasscodeBoldTarget: return weight.title
+        default: return option.rawValue
         }
     }
 
@@ -150,7 +161,7 @@ struct PasscodeThemeView: View {
                 apply()
             } label: {
                 HStack {
-                    Label(running ? "Applying…" : "Apply theme",
+                    Label(running ? "正在应用…" : "应用主题",
                           systemImage: "lock.rectangle.stack.fill")
                     Spacer()
                     if running { ProgressView().controlSize(.small) }
@@ -186,7 +197,7 @@ struct PasscodeThemeView: View {
                 do {
                     let loaded = try await PasscodeThemeReader.inspect(url: url)
                     theme = loaded
-                    status = "Loaded \(loaded.name)."
+                    status = "已载入 \(loaded.name)。"
                     tone = .primary
                 } catch {
                     status = error.localizedDescription
@@ -214,7 +225,7 @@ struct PasscodeThemeView: View {
                     log: { line in Task { @MainActor in log.append(line) } },
                     progress: { _ in }
                 )
-                status = "Theme applied. Lock the device to see it."
+                status = "主题已应用。锁定设备即可查看。"
                 tone = .primary
             } catch {
                 status = error.localizedDescription

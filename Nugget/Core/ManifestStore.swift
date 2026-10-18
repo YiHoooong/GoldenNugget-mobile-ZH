@@ -104,7 +104,7 @@ struct ManifestStore {
     private func open() throws -> OpaquePointer {
         var db: OpaquePointer?
         guard sqlite3_open(dbPath, &db) == SQLITE_OK, let db else {
-            throw GoldenNuggetError("Failed to open Manifest.db at \(dbPath)")
+            throw GoldenNuggetError("无法打开 Manifest.db：\(dbPath)")
         }
         return db
     }
@@ -120,7 +120,7 @@ struct ManifestStore {
         var stmt: OpaquePointer?
         guard sqlite3_prepare_v2(db, ManifestSchema.insertOrReplaceRow, -1, &stmt, nil) == SQLITE_OK,
               let stmt else {
-            throw GoldenNuggetError("Manifest.db: failed to prepare INSERT for \(domain)/\(relativePath)")
+            throw GoldenNuggetError("Manifest.db：为 \(domain)/\(relativePath) 准备 INSERT 失败")
         }
         defer { sqlite3_finalize(stmt) }
 
@@ -140,7 +140,7 @@ struct ManifestStore {
         }
         let rc = sqlite3_step(stmt)
         guard rc == SQLITE_DONE else {
-            throw GoldenNuggetError("Manifest.db: INSERT for \(domain)/\(relativePath) failed with code \(rc)")
+            throw GoldenNuggetError("Manifest.db：\(domain)/\(relativePath) 的 INSERT 失败，错误码 \(rc)")
         }
     }
 
@@ -192,9 +192,9 @@ struct ManifestStore {
         guard sqlite3_prepare_v2(db, "SELECT fileID, domain, relativePath FROM Files "
                                      + "WHERE relativePath LIKE ? ORDER BY relativePath DESC",
                                  -1, &stmt, nil) == SQLITE_OK, let stmt else {
-            throw GoldenNuggetError("Manifest.db has no readable Files table "
-                + "(tables present: \(tableNames.isEmpty ? "none" : tableNames.joined(separator: ", "))). "
-                + "That is the host-written placeholder, not the database the device uploads.")
+            throw GoldenNuggetError("Manifest.db 没有可读取的 Files 表 "
+                + "（存在的表：\(tableNames.isEmpty ? "无" : tableNames.joined(separator: ", "))）。"
+                + "这是主机写入的占位文件，而不是设备上传的数据库。")
         }
         defer { sqlite3_finalize(stmt) }
         sqlite3_bind_text(stmt, 1, pattern, -1, ManifestSchema.transient)

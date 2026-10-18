@@ -25,16 +25,16 @@ struct ApplyConfirmSheet: View {
     var body: some View {
         NavigationStack {
             List {
-                Section("Summary") {
-                    LabeledContent("Tweaks selected", value: "\(preview.selectedCount)")
-                    LabeledContent("Files to write", value: "\(preview.rows.count)")
-                    LabeledContent("Total size", value: Self.size(preview.totalBytes))
-                    LabeledContent("Estimated time",
+                Section("摘要") {
+                    LabeledContent("已选调整项", value: "\(preview.selectedCount)")
+                    LabeledContent("待写入文件", value: "\(preview.rows.count)")
+                    LabeledContent("总大小", value: Self.size(preview.totalBytes))
+                    LabeledContent("预计时间",
                                    value: ApplyPreview.timeEstimate(total: preview.selectedCount))
                 }
 
                 if let line = ApplyPreview.estimatedWorkingSpaceLine() {
-                    Section("Working space") {
+                    Section("工作空间") {
                         NativeNote(line)
                     }
                 }
@@ -44,7 +44,7 @@ struct ApplyConfirmSheet: View {
                 // when each is non-nil.
                 let warnings = [ApplyPreview.storageWarningLine(), batteryLine].compactMap { $0 }
                 if !warnings.isEmpty {
-                    Section("Warnings") {
+                    Section("警告") {
                         ForEach(Array(warnings.enumerated()), id: \.offset) { _, warning in
                             NativeSafetyNote(warning)
                         }
@@ -52,20 +52,20 @@ struct ApplyConfirmSheet: View {
                 }
 
                 if !preview.conflicts.isEmpty {
-                    Section("Conflicts") {
+                    Section("冲突") {
                         ForEach(preview.conflicts) { conflict in
                             Label(conflict.description, systemImage: "exclamationmark.triangle.fill")
                                 .font(.subheadline)
                                 .foregroundStyle(.red)
                         }
-                        NativeSafetyNote("These settings contradict each other. The later "
-                            + "tweak wins on the device, so the result may not be what "
-                            + "the list suggests.")
+                        NativeSafetyNote("这些设置相互矛盾。后写入的"
+                            + "调整项会在设备上生效，因此结果可能"
+                            + "与列表所示不符。")
                     }
                 }
 
                 if !preview.notes.isEmpty {
-                    Section("Notes") {
+                    Section("备注") {
                         ForEach(Array(preview.notes.enumerated()), id: \.offset) { _, note in
                             Text(note)
                                 .font(.footnote)
@@ -76,7 +76,7 @@ struct ApplyConfirmSheet: View {
                 }
 
                 if !preview.rows.isEmpty {
-                    Section("Files") {
+                    Section("文件") {
                         ForEach(preview.rows) { row in
                             HStack {
                                 Text(row.label)
@@ -92,14 +92,14 @@ struct ApplyConfirmSheet: View {
                 }
             }
             .listStyle(.insetGrouped)
-            .navigationTitle("Apply")
+            .navigationTitle("应用")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { onCancel() }
+                    Button("取消") { onCancel() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Apply") { onApply() }
+                    Button("应用") { onApply() }
                         .font(.headline)
                 }
             }
@@ -120,6 +120,6 @@ struct ApplyConfirmSheet: View {
         let charging = device.batteryState == .charging || device.batteryState == .full
         let percent = Int((level * 100).rounded())
         if charging || percent > 20 { return nil }
-        return "⚠ Low battery: \(percent)%. Connect the charger before restoring."
+        return "⚠ 电量不足：\(percent)%。请先连接充电器再恢复。"
     }
 }

@@ -98,14 +98,14 @@ final class WirelessPairing: NSObject, ObservableObject, NetServiceDelegate {
         endBackgroundTask()
         backgroundTask = UIApplication.shared.beginBackgroundTask(withName: "GoldenNugget.WirelessPairing") { [weak self] in
             Task { @MainActor in
-                GoldenNuggetEngine.shared.log("wireless pair: background time expired before the device connected")
+                GoldenNuggetEngine.shared.log("无线配对：设备连接前后台时间已耗尽")
                 self?.endBackgroundTask()
             }
         }
         if backgroundTask == .invalid {
-            GoldenNuggetEngine.shared.log("wireless pair: could not start a background task — the device can only pair while the app is on screen")
+            GoldenNuggetEngine.shared.log("无线配对：无法启动后台任务 —— 设备只能在应用处于屏幕前台时配对")
         } else {
-            GoldenNuggetEngine.shared.log("wireless pair: holding background task \(backgroundTask.rawValue) so the device can pair while Settings is open")
+            GoldenNuggetEngine.shared.log("无线配对：正在保持后台任务 \(backgroundTask.rawValue)，以便设备在“设置”打开期间完成配对")
         }
     }
 
@@ -139,8 +139,8 @@ final class WirelessPairing: NSObject, ObservableObject, NetServiceDelegate {
         let savedAltIRK = UserDefaults.standard.string(forKey: Self.hostAltIRKKey)
         let outPath = AppPaths.pairingFile.path(percentEncoded: false)
 
-        GoldenNuggetEngine.shared.log("wireless pair: advertising as \(Self.hostName)/\(MinimuxerConstants.defaultHostModel), "
-            + "record → \(AppPaths.pairingFile.lastPathComponent)")
+        GoldenNuggetEngine.shared.log("无线配对：正在以 \(Self.hostName)/\(MinimuxerConstants.defaultHostModel) 广播，"
+            + "记录 → \(AppPaths.pairingFile.lastPathComponent)")
         beginBackgroundTask()
 
         // DispatchQueue, not Task.detached: `al_pairing_run_host` blocks a whole
@@ -196,15 +196,15 @@ final class WirelessPairing: NSObject, ObservableObject, NetServiceDelegate {
         service.publish()
         netService = service
 
-        GoldenNuggetEngine.shared.log("wireless pair: published \(ready.serviceID) on port \(ready.port) "
-            + "with TXT keys [\(ready.txt.keys.sorted().joined(separator: ", "))] — waiting for the device to connect")
+        GoldenNuggetEngine.shared.log("无线配对：已发布 \(ready.serviceID)，端口 \(ready.port)，"
+            + "TXT 键为 [\(ready.txt.keys.sorted().joined(separator: ", "))] —— 正在等待设备连接")
     }
 
     /// Show the PIN the guest must confirm.  Main thread.
     private func show(pin receivedPin: String, generation runGeneration: Int) {
         guard runGeneration == generation else { return }
         pin = receivedPin
-        GoldenNuggetEngine.shared.log("wireless pair: PIN \(receivedPin) — confirm it in Settings → Developer Mode")
+        GoldenNuggetEngine.shared.log("无线配对：PIN \(receivedPin) —— 请在“设置” → “开发者模式”中确认")
     }
 
     /// Handle the run's terminal result.  Main thread.
@@ -220,11 +220,11 @@ final class WirelessPairing: NSObject, ObservableObject, NetServiceDelegate {
             }
             phase = .paired
             generatedRecordPath = paired.pairingFilePath
-            GoldenNuggetEngine.shared.log("wireless pair: completed — \(paired.deviceName) "
-                + "(\(paired.deviceModel)) → \(paired.pairingFilePath)")
+            GoldenNuggetEngine.shared.log("无线配对已完成 —— \(paired.deviceName) "
+                + "（型号 \(paired.deviceModel)）→ \(paired.pairingFilePath)")
         case .failure(let error):
             phase = .failed(error.localizedDescription)
-            GoldenNuggetEngine.shared.log("wireless pair failed: \(error.localizedDescription)")
+            GoldenNuggetEngine.shared.log("无线配对失败：\(error.localizedDescription)")
         }
     }
 
@@ -245,7 +245,7 @@ final class WirelessPairing: NSObject, ObservableObject, NetServiceDelegate {
         port = nil
         pin = nil
         generatedRecordPath = nil
-        GoldenNuggetEngine.shared.log("wireless pair: cancelled")
+        GoldenNuggetEngine.shared.log("无线配对：已取消")
     }
 
     /// Forget a terminal state so the button is live again.  Called by the page
@@ -262,7 +262,7 @@ final class WirelessPairing: NSObject, ObservableObject, NetServiceDelegate {
 
     private func stopAdvertising() {
         if let service = netService {
-            GoldenNuggetEngine.shared.log("wireless pair: stopped advertising \(service.name)")
+            GoldenNuggetEngine.shared.log("无线配对：已停止广播 \(service.name)")
             service.stop()
             netService = nil
         }
@@ -271,10 +271,10 @@ final class WirelessPairing: NSObject, ObservableObject, NetServiceDelegate {
     // MARK: - NetServiceDelegate
 
     func netServiceDidPublish(_ sender: NetService) {
-        GoldenNuggetEngine.shared.log("wireless pair: Bonjour accepted \(sender.name) on port \(sender.port)")
+        GoldenNuggetEngine.shared.log("无线配对：Bonjour 已接受 \(sender.name)（端口 \(sender.port)）")
     }
 
     func netService(_ sender: NetService, didNotPublish errorDict: [String: NSNumber]) {
-        GoldenNuggetEngine.shared.log("wireless pair: Bonjour refused \(sender.name) — \(errorDict)")
+        GoldenNuggetEngine.shared.log("无线配对：Bonjour 拒绝了 \(sender.name) —— \(errorDict)")
     }
 }

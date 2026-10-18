@@ -77,14 +77,14 @@ do {
                                          statusBar: statusBar,
                                          skipSetupEnabled: false,
                                          deviceVersion: "26.0", isIPhone: true)
-    check(classic.rows.contains { $0.label.hasPrefix("Status bar overrides (classic)") },
+    check(classic.rows.contains { $0.label.hasPrefix("状态栏覆盖项（经典）") },
           "classic status bar row appears below iOS 27")
     check(classic.totalBytes > 0, "status bar payload counts towards the total")
     let archive = try ApplyPreview.build(selection: TweakSelection(),
                                          statusBar: statusBar,
                                          skipSetupEnabled: false,
                                          deviceVersion: "27.0", isIPhone: true)
-    check(archive.rows.contains { $0.label.hasPrefix("Status bar overrides (iOS 27 archive)") },
+    check(archive.rows.contains { $0.label.hasPrefix("状态栏覆盖项（iOS 27 归档）") },
           "archive status bar row appears on iOS 27+")
 }
 
@@ -96,8 +96,8 @@ do {
                                          statusBar: StatusBarSelection(),
                                          skipSetupEnabled: true,
                                          deviceVersion: "27.0", isIPhone: true)
-    check(preview.rows.contains { $0.label.hasPrefix("Skip setup:") }, "skip setup rows appear")
-    check(preview.rows.first?.label.hasPrefix("Skip setup:") == true,
+    check(preview.rows.contains { $0.label.hasPrefix("跳过设置：") }, "skip setup rows appear")
+    check(preview.rows.first?.label.hasPrefix("跳过设置：") == true,
           "skip setup rows come ahead of the tweaks")
 }
 
@@ -111,16 +111,16 @@ do {
                                          skipSetupEnabled: false,
                                          deviceVersion: "27.0", isIPhone: true)
     check(preview.conflicts.count == 1, "RTL + LTR reports exactly one conflict")
-    check(preview.conflicts.first?.description.contains("Both layout directions") == true,
+    check(preview.conflicts.first?.description.contains("同时强制了两个布局方向") == true,
           "conflict description names the contradiction")
 }
 
 // 6 — the desktop's estimates.
 do {
-    check(ApplyPreview.timeEstimate(total: 0) == "≈ 2 min", "time estimate floors at one selection")
-    check(ApplyPreview.timeEstimate(total: 7) == "≈ 3 min", "time estimate rounds half up")
-    check(ApplyPreview.timeEstimate(total: 10) == "≈ 3 min", "time estimate for 10 tweaks")
-    check(ApplyPreview.timeEstimate(total: 12) == "≈ 4 min", "time estimate for 12 tweaks")
+    check(ApplyPreview.timeEstimate(total: 0) == "≈ 2 分钟", "time estimate floors at one selection")
+    check(ApplyPreview.timeEstimate(total: 7) == "≈ 3 分钟", "time estimate rounds half up")
+    check(ApplyPreview.timeEstimate(total: 10) == "≈ 3 分钟", "time estimate for 10 tweaks")
+    check(ApplyPreview.timeEstimate(total: 12) == "≈ 4 分钟", "time estimate for 12 tweaks")
     check(ApplyPreview.freeBytes != nil, "the volume reports free space")
     check(ApplyPreview.estimatedWorkingSpaceLine() != nil, "the working-space line reads the volume")
     if let warning = ApplyPreview.storageWarningLine() {

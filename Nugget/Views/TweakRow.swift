@@ -56,7 +56,7 @@ struct TweakRow: View {
             case .text:
                 VStack(alignment: .leading, spacing: 6) {
                     Text(spec.title)
-                    TextField("(empty = clear)", text: textBinding)
+                    TextField("(留空即清除)", text: textBinding)
                         .textFieldStyle(.roundedBorder)
                         .autocorrectionDisabled()
                         .textInputAutocapitalization(.never)
@@ -117,7 +117,7 @@ struct TweakNumberField: View {
     }
 
     var body: some View {
-        TextField("value", text: $draft)
+        TextField("数值", text: $draft)
             // `.decimalPad` has no Return key: on a phone the keyboard would
             // be impossible to dismiss.
             .keyboardType(.decimalPad)

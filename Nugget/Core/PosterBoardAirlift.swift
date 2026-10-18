@@ -63,19 +63,19 @@ enum PosterBoardAirlift {
         progress: @escaping (Double) -> Void
     ) async throws {
         let packs = selection.tendies
-        guard !packs.isEmpty else { throw GoldenNuggetError("No PosterBoard packs to inject.") }
+        guard !packs.isEmpty else { throw GoldenNuggetError("没有可注入的海报板包。") }
 
         var container = cachedContainer
         if container.isEmpty {
-            log("Locating \(bundleID) over the tunnel…")
+            log("正在通过隧道定位 \(bundleID)…")
             container = try await resolveContainer(pairingPath: pairingPath)
         }
         if !container.hasSuffix("/") { container += "/" }
-        log("PosterBoard container: \(container)")
+        log("海报板容器：\(container)")
         // The version directory is not read back from the device — the FFI has no
         // readdir — so it is the one this port knows, and saying so in the log is
         // what makes a descriptor that does not show up diagnosable afterwards.
-        log("Store version directory: \(structureVersion)")
+        log("存储版本目录：\(structureVersion)")
 
         var injected = 0
 
@@ -113,7 +113,7 @@ enum PosterBoardAirlift {
                 do {
                     try await Airlift.extractZip(archivePath: pack.url.path, destDir: stage.path)
                 } catch {
-                    log("  ⚠️ could not unpack: \(error.localizedDescription)")
+                    log("  ⚠️ 无法解包：\(error.localizedDescription)")
                     continue
                 }
 
@@ -138,10 +138,10 @@ enum PosterBoardAirlift {
                                                 defaultExtension: pack.posterType.extensionBundleID,
                                                 log: log)
                 guard !descriptors.isEmpty else {
-                    log("  ⚠️ no descriptor folders found in this pack")
+                    log("  ⚠️ 此包中未找到描述符文件夹")
                     continue
                 }
-                log("  \(descriptors.count) descriptor(s)")
+                log("  \(descriptors.count) 个描述符")
 
                 for (position, descriptor) in descriptors.enumerated() {
                     let target = UUID().uuidString.uppercased()
@@ -192,19 +192,19 @@ enum PosterBoardAirlift {
                         // descriptor is not going to be retried in this run.
                         done += 1
                         progress(overall(done))
-                        log("  ❌ \(descriptor.extensionID): \(error.localizedDescription)")
+                        log("  ❌ \(descriptor.extensionID)：注入失败 —— \(error.localizedDescription)")
                     }
                 }
             }
         }
 
         guard injected > 0 else {
-            throw GoldenNuggetError("No PosterBoard descriptor was injected. The device has to be "
-                + "unlocked with LocalDevVPN up; if it was, the cached container was stale and has "
-                + "been cleared for the next attempt.")
+            throw GoldenNuggetError("没有注入任何海报板描述符。设备需要处于 "
+                + "解锁状态并开启 LocalDevVPN；如果满足，则缓存的容器已过期，"
+                + "已为下次尝试清除。")
         }
 
-        log("Respring so PosterBoard re-reads the store…")
+        log("正在重新载入界面，让海报板重新读取存储…")
         // The injections are the queue, so the bar is full before the respring;
         // the line below is what the operator is actually waiting on, and a bar
         // that sits at 100% through it reads as finished. This is a userspace
@@ -212,7 +212,7 @@ enum PosterBoardAirlift {
         progress(99)
         try await Airlift.respring()
         progress(100)
-        log("Injected \(injected) descriptor(s).")
+        log("已注入 \(injected) 个描述符。")
     }
 
     // MARK: - Descriptor discovery
@@ -367,7 +367,7 @@ enum PosterBoardAirlift {
             if !found.isEmpty { break }
         }
         if !found.isEmpty {
-            log("  found \(found.count) descriptor folder(s) in the store snapshot")
+            log("  在存储快照中找到 \(found.count) 个描述符文件夹")
             return found
         }
 
@@ -378,7 +378,7 @@ enum PosterBoardAirlift {
             guard manager.fileExists(atPath: descDir.path) else { continue }
             let entries = directories(descDir)
             guard !entries.isEmpty else { continue }
-            log("  found \(entries.count) descriptor folder(s) under \(folderName)/")
+            log("  找到 \(entries.count) 个描述符文件夹，位于 \(folderName)/")
             return entries.map { Descriptor(extensionID: defaultExtension, url: $0) }
         }
 
@@ -388,7 +388,7 @@ enum PosterBoardAirlift {
             guard manager.fileExists(atPath: descDir.path) else { continue }
             let entries = directories(descDir)
             guard !entries.isEmpty else { continue }
-            log("  found \(entries.count) video descriptor folder(s) under \(folderName)/")
+            log("  找到 \(entries.count) 个视频描述符文件夹，位于 \(folderName)/")
             return entries.map {
                 Descriptor(extensionID: "com.apple.PhotosUIPrivate.PhotosPosterProvider", url: $0)
             }
@@ -399,7 +399,7 @@ enum PosterBoardAirlift {
             || manager.fileExists(atPath: root.appendingPathComponent("Wallpaper.plist").path)
             || manager.fileExists(atPath: root.appendingPathComponent(
                 "com.apple.posterkit.provider.descriptor.identifier").path) {
-            log("  the pack root is the descriptor")
+            log("  包根目录本身就是描述符")
             return [Descriptor(extensionID: defaultExtension, url: root)]
         }
 
@@ -411,7 +411,7 @@ enum PosterBoardAirlift {
             found.append(Descriptor(extensionID: defaultExtension, url: sub))
         }
         if !found.isEmpty {
-            log("  found \(found.count) descriptor folder(s) by shape")
+            log("  按结构找到 \(found.count) 个描述符文件夹")
         }
         return found
     }

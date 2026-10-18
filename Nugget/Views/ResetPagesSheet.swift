@@ -43,17 +43,17 @@ struct ResetPagesSheet: View {
                 procedureSection
             }
             .listStyle(.insetGrouped)
-            .navigationTitle("Reset Page Tweaks")
+            .navigationTitle("重置页面调整项")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button("取消") {
                         selection.removeAll()
                         dismiss()
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Reset", role: .destructive) {
+                    Button("重置", role: .destructive) {
                         let pages = selection
                         // Dismiss first: the run reports into the home page's
                         // status line, and a sheet over it would hide the
@@ -73,7 +73,7 @@ struct ResetPagesSheet: View {
     /// One switch row per page, with the count of files behind it, right-aligned
     /// in the row.
     private var pageSection: some View {
-        Section("Select the pages you would like to reset.") {
+        Section("选择要重置的页面。") {
             ForEach(ResetPage.allCases) { page in
                 Toggle(isOn: binding(for: page)) {
                     HStack {
@@ -98,9 +98,9 @@ struct ResetPagesSheet: View {
     @ViewBuilder
     private var whatItTouches: some View {
         if plan.targets.isEmpty {
-            Section { NativeNote("Nothing selected yet.") }
+            Section { NativeNote("尚未选择任何页面。") }
         } else {
-            Section("Writes \(plan.targets.count) file(s) to the device:") {
+            Section("将向设备写入 \(plan.targets.count) 个文件：") {
                 ForEach(plan.targets) { target in
                     Text("\(shortPath(target.path)) · \(target.kind.rawValue)")
                         .font(.caption)
@@ -121,25 +121,25 @@ struct ResetPagesSheet: View {
     private var procedureSection: some View {
         Section {
             if isIOS27 {
-                NativeSafetyNote("iOS \(deviceVersion): each nulled file is written as a "
-                    + "valid empty plist, not 0 bytes. A 0-byte plist is a truncated plist on "
-                    + "this release and crashes SpringBoard at boot. An empty plist parses, and the "
-                    + "system falls back to its own defaults.")
+                NativeSafetyNote("iOS \(deviceVersion)：每个被置空的文件都会写入为"
+                    + "有效的空 plist，而不是 0 字节。0 字节的 plist 在此版本上属于"
+                    + "截断的 plist，会导致 SpringBoard 在启动时崩溃。空 plist 可以正常解析，"
+                    + "系统会回退到自身的默认值。")
             } else {
-                NativeNote("Each nulled file is written as 0 bytes, which makes the "
-                    + "daemon that reads it fall back to its defaults.")
+                NativeNote("每个被置空的文件都会写入为 0 字节，这会使"
+                    + "读取它的守护进程回退到自身的默认值。")
             }
-            NativeNote("Nothing is read back from the device first: no original values "
-                + "are captured, so a file that was already custom before an apply is put back to "
-                + "its default rather than to what it held. The daemon list is the exception — it "
-                + "is written with the six entries a stock device ships. The selections in this app "
-                + "are left alone; applying again writes the tweaks back.")
-            NativeNote("The Status Bar reset is the one file here that is written whole, not "
-                + "nulled: a fresh, all-default "
-                + (isIOS27 ? "StatusBarOverrides.archive with no cellular entries, which "
-                    + "SpringBoard decodes as \"no overrides\"."
-                    : "statusBarOverrides struct, so every override reads as off.")
-                + " It goes through the same mechanism the Status Bar page applies with.")
+            NativeNote("重置前不会先从设备读回任何内容：不会捕获"
+                + "原始值，因此应用前已被自定义的文件会被恢复为"
+                + "默认值，而不是它原本保存的内容。守护进程列表是例外——它"
+                + "会按原厂设备自带的六个条目写入。此应用中的选择"
+                + "不受影响；再次应用会把这些调整项写回。")
+            NativeNote("状态栏重置是这里唯一整体写入的文件，而不是"
+                + "置空的文件：一个全新的、全默认的 "
+                + (isIOS27 ? "StatusBarOverrides.archive，不含蜂窝网络条目，"
+                    + "SpringBoard 会将其解码为“无覆盖”。"
+                    : "statusBarOverrides struct，因此每个覆盖项都会读取为关闭。")
+                + "它使用的机制与状态栏页面应用时相同。")
         }
     }
 
@@ -150,7 +150,7 @@ struct ResetPagesSheet: View {
 
     private func fileCount(_ page: ResetPage) -> String {
         let count = page.locations.count
-        return count == 1 ? "1 file" : "\(count) files"
+        return count == 1 ? "1 个文件" : "\(count) 个文件"
     }
 
     /// The file name, not the path. Every location here sits in one of a few

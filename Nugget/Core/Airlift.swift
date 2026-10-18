@@ -80,8 +80,8 @@ enum Airlift {
     /// The reason to refuse, for the UI.
     static func unsupportedReason(deviceVersion: String) -> String {
         isSupported(deviceVersion: deviceVersion) ? ""
-            : "AirLift needs iOS \(minimumVersion) or newer — this device reports "
-            + (deviceVersion.isEmpty ? "no version" : "iOS \(deviceVersion)") + "."
+            : "AirLift 需要 iOS \(minimumVersion) 或更高版本 —— 当前设备版本："
+            + (deviceVersion.isEmpty ? "未报告" : "iOS \(deviceVersion)") + "."
     }
 
     /// Refuse unless the device is new enough, re-reading it first.
@@ -127,8 +127,8 @@ enum Airlift {
     static func installGrappaTokenProvider() -> Int32 {
         let status = GrappaToken.status()
         AppLog.write(status == 0
-                     ? "airlift: Grappa token provider ready (\(GrappaToken.previewLength()) bytes)"
-                     : "airlift: Grappa token provider unavailable (code \(status))")
+                     ? "airlift：Grappa token 提供程序已就绪（\(GrappaToken.previewLength()) 字节）"
+                     : "airlift：Grappa token 提供程序不可用（代码 \(status)）")
         return status
     }
 
@@ -166,7 +166,7 @@ enum Airlift {
             let rc = al_exploit_write_dir(pairingPath, sourceDir, targetDir,
                                           logTrampoline, nil, &outError)
             guard rc == 0 else {
-                throw GoldenNuggetError(take(outError) ?? "AirLift directory write returned \(rc).")
+                throw GoldenNuggetError(take(outError) ?? "AirLift 目录写入返回 \(rc)。")
             }
         }
     }
@@ -183,7 +183,7 @@ enum Airlift {
             let rc = al_exploit_inject_folder(pairingPath, folderPath, targetParentDir, destName,
                                               logTrampoline, nil, &outError)
             guard rc == 0 else {
-                throw GoldenNuggetError(take(outError) ?? "AirLift folder injection returned \(rc).")
+                throw GoldenNuggetError(take(outError) ?? "AirLift 文件夹注入返回 \(rc)。")
             }
         }
     }
@@ -203,7 +203,7 @@ enum Airlift {
             let container = take(outContainer)
             let message = take(outError)
             guard rc == 0, let container else {
-                throw GoldenNuggetError(message ?? "No container for \(bundleID) (code \(rc)).")
+                throw GoldenNuggetError(message ?? "找不到 \(bundleID) 的容器（代码 \(rc)）。")
             }
             return container
         }
@@ -223,8 +223,8 @@ enum Airlift {
     static func respring() async throws {
         let attached = await MainActor.run { NeoSpring.trigger() }
         guard attached else {
-            throw GoldenNuggetError("There is no window to respring from. Leave the app in the "
-                + "foreground and run it again.")
+            throw GoldenNuggetError("没有可用于重新载入界面的窗口。请让应用保持在前台，"
+                + "然后重试。")
         }
         // Give WebKit the moment it needs to load the payload. Returning
         // earlier would let the run report a respring that had not started yet.
@@ -245,7 +245,7 @@ enum Airlift {
             var outError: UnsafeMutablePointer<CChar>?
             let rc = al_device_respring(pairingPath, logTrampoline, nil, &outError)
             guard rc == 0 else {
-                throw GoldenNuggetError(take(outError) ?? "Reboot returned \(rc).")
+                throw GoldenNuggetError(take(outError) ?? "重启返回 \(rc)。")
             }
         }
     }
@@ -274,7 +274,7 @@ enum Airlift {
                 SyslogRegistry.shared.handler(UInt(bitPattern: ctx))?(String(cString: line))
             }, UnsafeMutableRawPointer(bitPattern: token), &outError)
             if let message = take(outError) {
-                AppLog.write("AirLift syslog stream ended (code \(rc)): \(message)")
+                AppLog.write("AirLift syslog 流已结束（代码 \(rc)）：\(message)")
             }
             SyslogRegistry.shared.remove(token)
         }
@@ -320,7 +320,7 @@ enum Airlift {
     static func extractPassthm(archivePath: String, destDir: String) async throws -> String {
         try await offMainActor {
             let rc = al_passthm_extract(archivePath, destDir)
-            guard rc == 0 else { throw GoldenNuggetError("Could not unpack \(archivePath) (code \(rc)).") }
+            guard rc == 0 else { throw GoldenNuggetError("无法解包 \(archivePath)（代码 \(rc)）。") }
         }
         return destDir
     }
@@ -331,7 +331,7 @@ enum Airlift {
     static func extractZip(archivePath: String, destDir: String) async throws -> String {
         try await offMainActor {
             let rc = al_zip_extract_all(archivePath, destDir)
-            guard rc == 0 else { throw GoldenNuggetError("Could not unpack \(archivePath) (code \(rc)).") }
+            guard rc == 0 else { throw GoldenNuggetError("无法解包 \(archivePath)（代码 \(rc)）。") }
         }
         return destDir
     }

@@ -44,9 +44,9 @@ struct PresetManagerView: View {
     var body: some View {
         List {
             Section {
-                NativeNote("Save, switch and share complete tweak configurations. "
-                    + "Loading a preset replaces the current selection; the home "
-                    + "Apply still delivers it to the device.")
+                NativeNote("保存、切换并分享完整的调整配置。"
+                    + "载入预设会替换当前的选择；"
+                    + "主页上的“应用”仍会将其下发到设备。")
             }
 
             saveSection
@@ -57,7 +57,7 @@ struct PresetManagerView: View {
             if let loadReport { reportSection(loadReport) }
         }
         .listStyle(.insetGrouped)
-        .navigationTitle("Presets")
+        .navigationTitle("预设")
         .navigationBarTitleDisplayMode(.inline)
         // Compact widths only -- the split view draws its own sidebar toggle.
         .goldenSidebarButton()
@@ -71,32 +71,32 @@ struct PresetManagerView: View {
             case .failure(let error): setMessage(error.localizedDescription, .error)
             }
         }
-        .alert("Load Preset", isPresented: isPresented($confirmLoad),
+        .alert("载入预设", isPresented: isPresented($confirmLoad),
                presenting: confirmLoad) { info in
-            Button("Cancel", role: .cancel) { confirmLoad = nil }
-            Button("Load") {
+            Button("取消", role: .cancel) { confirmLoad = nil }
+            Button("载入") {
                 performLoad(info)
                 confirmLoad = nil
             }
         } message: { info in
             Text(loadConfirmMessage(info))
         }
-        .alert("Rollback Last Apply", isPresented: $confirmRollback) {
-            Button("Cancel", role: .cancel) {}
-            Button("Roll back") { performRollback() }
+        .alert("回滚上次应用", isPresented: $confirmRollback) {
+            Button("取消", role: .cancel) {}
+            Button("回滚") { performRollback() }
         } message: {
-            Text("Load the snapshot taken before the last successful apply? "
-                + "This will replace your current configuration.")
+            Text("载入上次成功应用前拍摄的快照？"
+                + "这会替换你当前的配置。")
         }
-        .alert("Delete Preset", isPresented: isPresented($pendingDelete),
+        .alert("删除预设", isPresented: isPresented($pendingDelete),
                presenting: pendingDelete) { info in
-            Button("Cancel", role: .cancel) { pendingDelete = nil }
-            Button("Delete", role: .destructive) {
+            Button("取消", role: .cancel) { pendingDelete = nil }
+            Button("删除", role: .destructive) {
                 performDelete(info)
                 pendingDelete = nil
             }
         } message: { info in
-            Text("Delete preset \"\(info.name)\"?")
+            Text("删除预设“\(info.name)”？")
         }
         .sheet(item: $share) { item in
             ShareSheet(url: item.url)
@@ -114,24 +114,24 @@ struct PresetManagerView: View {
     // MARK: - Sections
 
     private var saveSection: some View {
-        Section("Save current configuration") {
-            TextField("Preset name", text: $newName)
+        Section("保存当前配置") {
+            TextField("预设名称", text: $newName)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
-            TextField("Description (optional)", text: $newDescription)
+            TextField("描述（可选）", text: $newDescription)
             Button {
                 saveCurrent()
             } label: {
-                Label("Save Preset", systemImage: "square.and.arrow.down")
+                Label("保存预设", systemImage: "square.and.arrow.down")
             }
             .disabled(newName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         }
     }
 
     private var presetsSection: some View {
-        Section("Saved presets") {
+        Section("已保存的预设") {
             if presets.isEmpty {
-                Text("No presets yet.")
+                Text("还没有预设。")
                     .foregroundStyle(.secondary)
             } else {
                 ForEach(presets) { info in
@@ -158,31 +158,31 @@ struct PresetManagerView: View {
             Button {
                 showImporter = true
             } label: {
-                Label("Import Preset…", systemImage: "square.and.arrow.up.on.square")
+                Label("导入预设…", systemImage: "square.and.arrow.up.on.square")
             }
         }
     }
 
     private var actionsSection: some View {
         Section {
-            Button("Load") { requestLoad() }
+            Button("载入") { requestLoad() }
                 .disabled(selected == nil)
-            Button("Export") { export(include: nil) }
+            Button("导出") { export(include: nil) }
                 .disabled(selected == nil)
-            Button("Partial Export…") { requestPartialExport() }
+            Button("部分导出…") { requestPartialExport() }
                 .disabled(selected == nil)
-            Button("Rollback Last Apply") { requestRollback() }
+            Button("回滚上次应用") { requestRollback() }
                 .disabled(!GoldenNuggetPresets.hasRollback)
             Button(role: .destructive) {
                 pendingDelete = selected
             } label: {
-                Text("Delete")
+                Text("删除")
             }
             .disabled(selected == nil)
         } footer: {
             Text(GoldenNuggetPresets.hasRollback
-                 ? "Rollback restores the snapshot taken before the last successful apply."
-                 : "Rollback is available once an apply has succeeded.")
+                 ? "回滚会恢复上次成功应用前拍摄的快照。"
+                 : "成功应用一次后即可使用回滚。")
         }
     }
 
@@ -198,7 +198,7 @@ struct PresetManagerView: View {
     /// The same block the Tweaks page writes for an import — the reference logs
     /// one report for both a preset load and an autosave import.
     private func reportSection(_ report: TweakImportReport) -> some View {
-        Section("Load result") {
+        Section("载入结果") {
             ForEach(Array(report.logLines.enumerated()), id: \.offset) { _, line in
                 Text(line)
                     .font(.system(.caption, design: .monospaced))
@@ -239,7 +239,7 @@ struct PresetManagerView: View {
     private func saveCurrent() {
         let name = newName.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !name.isEmpty else {
-            setMessage("Enter a name for this preset.", .warning)
+            setMessage("请输入此预设的名称。", .warning)
             return
         }
         let ok = GoldenNuggetPresets.save(name,
@@ -248,11 +248,11 @@ struct PresetManagerView: View {
                                           iosVersion: identity.version,
                                           description: newDescription)
         guard ok else {
-            setMessage("Failed to save the preset.", .error)
+            setMessage("保存预设失败。", .error)
             return
         }
         let stored = GoldenNuggetPresets.sanitize(name)
-        setMessage("Preset \"\(stored)\" saved.", .success)
+        setMessage("预设“\(stored)”已保存。", .success)
         newName = ""
         newDescription = ""
         refresh()
@@ -261,7 +261,7 @@ struct PresetManagerView: View {
 
     private func requestLoad() {
         guard let info = selected else {
-            setMessage("Select a preset first.", .warning)
+            setMessage("请先选择一个预设。", .warning)
             return
         }
         confirmLoad = info
@@ -271,10 +271,10 @@ struct PresetManagerView: View {
     /// (`preset_menu.py:123`).  The hidden-feature warning is not reproduced:
     /// this port has no per-feature safety rules engine to consult.
     private func loadConfirmMessage(_ info: GoldenNuggetPresets.PresetInfo) -> String {
-        var text = "Load preset \"\(info.name)\"?"
-        if !info.description.isEmpty { text += "\n\nDescription: \(info.description)" }
-        text += "\nDevice: \(info.deviceModel) • iOS \(info.iosVersion)"
-        text += "\n\nThis will replace your current configuration."
+        var text = "载入预设“\(info.name)”？"
+        if !info.description.isEmpty { text += "\n\n描述：\(info.description)" }
+        text += "\n设备：\(info.deviceModel) • iOS \(info.iosVersion)"
+        text += "\n\n这会替换你当前的配置。"
         if let warning = daemonCompatibilityWarning(info) {
             text += "\n\n⚠ \(warning)"
         }
@@ -286,33 +286,33 @@ struct PresetManagerView: View {
         var mismatches: [String] = []
         if let saved = majorVersion(info.iosVersion),
            let current = majorVersion(identity.version), saved != current {
-            mismatches.append("iOS \(saved)x vs current iOS \(current)x")
+            mismatches.append("iOS \(saved)x 对比当前 iOS \(current)x")
         }
         let savedType = deviceType(info.deviceModel)
         let currentType = deviceType(identity.productType)
         if !savedType.isEmpty && !currentType.isEmpty && savedType != currentType {
-            mismatches.append("\(savedType) vs current \(currentType)")
+            mismatches.append("\(savedType) 对比当前 \(currentType)")
         }
         guard !mismatches.isEmpty else { return nil }
-        return "This preset contains daemon modifications that were saved for a "
-            + "different device:\n" + mismatches.map { "• \($0)" }.joined(separator: "\n")
-            + "\n\nDaemons are sensitive to the iOS version and device type, and "
-            + "applying incompatible ones can bootloop your device. Proceed with caution."
+        return "此预设包含为其他设备保存的"
+            + "守护进程修改：\n" + mismatches.map { "• \($0)" }.joined(separator: "\n")
+            + "\n\n守护进程对 iOS 版本和设备类型很敏感，"
+            + "应用不兼容的守护进程可能导致设备启动循环，请谨慎操作。"
     }
 
     private func performLoad(_ info: GoldenNuggetPresets.PresetInfo) {
         guard let preset = GoldenNuggetPresets.load(info.name) else {
-            setMessage("Failed to load the preset.", .error)
+            setMessage("载入预设失败。", .error)
             return
         }
-        apply(preset, label: "Preset \"\(info.name)\" loaded.")
+        apply(preset, label: "预设“\(info.name)”已载入。")
     }
 
     /// `rollback_preset_flow` (`preset_menu.py:188`): the `__Rollback` snapshot
     /// loaded through the ordinary path.
     private func requestRollback() {
         guard GoldenNuggetPresets.hasRollback else {
-            setMessage("There is no previous successful apply to roll back yet.", .warning)
+            setMessage("尚无可回滚的上次成功应用。", .warning)
             return
         }
         confirmRollback = true
@@ -320,10 +320,10 @@ struct PresetManagerView: View {
 
     private func performRollback() {
         guard let preset = GoldenNuggetPresets.loadRollback() else {
-            setMessage("There is no previous successful apply to roll back yet.", .warning)
+            setMessage("尚无可回滚的上次成功应用。", .warning)
             return
         }
-        apply(preset, label: "Rolled back to the previous applied state.")
+        apply(preset, label: "已回滚到上次应用的状态。")
     }
 
     /// `PresetManager.load_preset`'s observable effect, ported: apply the parsed
@@ -342,11 +342,11 @@ struct PresetManagerView: View {
 
     private func export(include: Set<String>?) {
         guard let info = selected else {
-            setMessage("Select a preset first.", .warning)
+            setMessage("请先选择一个预设。", .warning)
             return
         }
         guard let data = GoldenNuggetPresets.exportData(for: info.name, include: include) else {
-            setMessage("Failed to export preset.", .error)
+            setMessage("导出预设失败。", .error)
             return
         }
         let url = FileManager.default.temporaryDirectory
@@ -355,18 +355,18 @@ struct PresetManagerView: View {
             try data.write(to: url, options: .atomic)
             share = ShareItem(url: url)
         } catch {
-            setMessage("Failed to export preset: \(error.localizedDescription)", .error)
+            setMessage("导出预设失败：\(error.localizedDescription)", .error)
         }
     }
 
     private func requestPartialExport() {
         guard let info = selected else {
-            setMessage("Select a preset first.", .warning)
+            setMessage("请先选择一个预设。", .warning)
             return
         }
         let ids = GoldenNuggetPresets.tweakIDs(for: info.name)
         guard !ids.isEmpty else {
-            setMessage("This preset has no tweaks to export.", .warning)
+            setMessage("此预设没有可导出的调整项。", .warning)
             return
         }
         partialExport = PartialExportTarget(info: info, ids: ids)
@@ -374,11 +374,11 @@ struct PresetManagerView: View {
 
     private func performDelete(_ info: GoldenNuggetPresets.PresetInfo) {
         guard GoldenNuggetPresets.delete(info.name) else {
-            setMessage("Failed to delete the preset.", .error)
+            setMessage("删除预设失败。", .error)
             return
         }
         if selectedName == info.name { selectedName = nil }
-        setMessage("Preset \"\(info.name)\" deleted.", .success)
+        setMessage("预设“\(info.name)”已删除。", .success)
         refresh()
     }
 
@@ -391,9 +391,9 @@ struct PresetManagerView: View {
         if ok {
             refresh()
             selectedName = result
-            setMessage("Preset \"\(result)\" imported successfully.", .success)
+            setMessage("预设“\(result)”导入成功。", .success)
         } else {
-            setMessage("Failed to import preset: \(result)", .error)
+            setMessage("导入预设失败：\(result)", .error)
         }
     }
 
@@ -452,7 +452,7 @@ private struct ShareSheet: View {
     var body: some View {
         VStack(spacing: 16) {
             ShareLink(item: url) {
-                Label("Save or share preset", systemImage: "square.and.arrow.up")
+                Label("保存或分享预设", systemImage: "square.and.arrow.up")
                     .font(.headline)
             }
             .buttonStyle(.glassProminent)
@@ -509,17 +509,17 @@ private struct PartialExportSheet: View {
                         .buttonStyle(.plain)
                     }
                 } header: {
-                    Text("Tweaks to include (\(chosen.count)/\(target.ids.count))")
+                    Text("要包含的调整项（\(chosen.count)/\(target.ids.count)）")
                 }
             }
-            .navigationTitle("Partial Export")
+            .navigationTitle("部分导出")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { onCancel() }
+                    Button("取消") { onCancel() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Export") { onExport(chosen) }
+                    Button("导出") { onExport(chosen) }
                         .disabled(chosen.isEmpty)
                 }
             }

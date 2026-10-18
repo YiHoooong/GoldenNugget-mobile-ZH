@@ -27,7 +27,7 @@ struct PosterBoardConversion: Hashable {
 
     /// The reference's `f"{wallpaper} -> {screen or '?'} planes={planes}"`.
     var summary: String {
-        (isDryRun ? "[dry] " : "") + "\(wallpaper) -> \(screen ?? "?") planes=\(planes)"
+        (isDryRun ? "[试运行] " : "") + "\(wallpaper) → \(screen ?? "?")，平面数=\(planes)"
     }
 
     /// The reference's two `print()`s in `apply_tweak`.
@@ -37,13 +37,13 @@ struct PosterBoardConversion: Hashable {
     /// spelled out rather than reproduced — "to None" reads like a failure.
     var convertedLine: String {
         flattened
-            ? "Sanitized \(wallpaper) (flattened \(planes.joined(separator: ", ")))"
-            : "Converted legacy wallpaper \(wallpaper) to \(screen ?? "?") "
-                + "(planes=\(planes.joined(separator: ", ")))"
+            ? "已整理 \(wallpaper)（已展平 \(planes.joined(separator: "、"))）"
+            : "已将旧版墙纸 \(wallpaper) 转换到 \(screen ?? "?") "
+                + "（平面数=\(planes.joined(separator: "、"))）"
     }
 
     var renamedLine: String {
-        "Renamed wallpaper to \(wallpaper) (planes=\(planes.joined(separator: ", ")))"
+        "已将墙纸重命名为 \(wallpaper)（平面数=\(planes.joined(separator: "、"))）"
     }
 }
 
@@ -409,8 +409,8 @@ enum PosterBoardConverter {
         do {
             archive = try Archive(url: packURL, accessMode: .read)
         } catch {
-            throw GoldenNuggetError("\(packURL.lastPathComponent) is not a readable .tendies "
-                + "archive: \(error.localizedDescription)")
+            throw GoldenNuggetError("\(packURL.lastPathComponent) 不是可读的 .tendies "
+                + "归档：\(error.localizedDescription)")
         }
         var bundles: Set<String> = []
         var indexes: [String: [String]] = [:]
@@ -756,7 +756,7 @@ enum PosterBoardConverter {
         let full = NSRange(text.startIndex..., in: text)
         guard let match = rootLayerRE.firstMatch(in: text, range: full),
               let matchRange = Range(match.range, in: text) else {
-            throw GoldenNuggetError("main.caml has no root CALayer")
+            throw GoldenNuggetError("main.caml 中没有根 CALayer")
         }
         let tag = String(text[matchRange])
         let oldID = xmlAttribute(tag, "id")
@@ -804,7 +804,7 @@ enum PosterBoardConverter {
         let unitsInPixels = planeUnits(index, logicalWidth: logicalWidth)
         let mainCAML = planeDir.appendingPathComponent("main.caml")
         guard let original = readText(mainCAML) else {
-            throw GoldenNuggetError("\(planeDir.lastPathComponent) has no main.caml")
+            throw GoldenNuggetError("\(planeDir.lastPathComponent) 中没有 main.caml")
         }
         let stripped = stripScripts(original)
         let text: String
@@ -841,7 +841,7 @@ enum PosterBoardConverter {
                                         maxMultiplier: Double = defaultMaxAdaptiveTimeMultiplier) throws {
         let path = wallpaperDir.appendingPathComponent("Wallpaper.plist")
         var data = readPlist(path)
-        guard !data.isEmpty else { throw GoldenNuggetError("\(path.lastPathComponent) is missing or unreadable") }
+        guard !data.isEmpty else { throw GoldenNuggetError("\(path.lastPathComponent) 缺失或无法读取") }
 
         data["family"] = clownfishFamily
         // `setdefault`, so a package that already carries these keeps its own
@@ -1065,7 +1065,7 @@ enum PosterBoardConverter {
                                   maxMultiplier: Double = defaultMaxAdaptiveTimeMultiplier) throws
         -> PosterBoardConversion {
         guard let wallpaperDir = findWallpaperDir(descriptorDir) else {
-            throw GoldenNuggetError("\(descriptorDir.lastPathComponent) has no wallpaper folder")
+            throw GoldenNuggetError("\(descriptorDir.lastPathComponent) 中没有墙纸文件夹")
         }
         let data = readPlist(wallpaperDir.appendingPathComponent("Wallpaper.plist"))
         // The reference's fallback is 390x844@3 here and 393x852@3 in

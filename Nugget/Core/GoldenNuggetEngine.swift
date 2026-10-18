@@ -61,10 +61,10 @@ class GoldenNuggetEngine {
         do {
             return try await body()
         } catch let failure as TransportFailure where failure.isCancellation {
-            log("\(label) stopped: \(failure.label)")
+            log("\(label) 已停止：\(failure.label)")
             throw failure
         } catch {
-            log("\(label) failed: \(error.localizedDescription)")
+            log("\(label) 失败：\(error.localizedDescription)")
             throw error
         }
     }
@@ -123,14 +123,14 @@ class GoldenNuggetEngine {
 
         let meaning: String
         switch rc {
-        case 0:   meaning = "file sink requested (DEBUG)"
-        case -1:  meaning = "file error — path rejected by Rust"
-        case -2:  meaning = "already initialized — a previous idevice_init_logger call won, Rust logs stay on console(Error) and never reach the file"
-        case -3:  meaning = "invalid path string"
-        case -99: meaning = "no ideviceGateway available"
-        default:  meaning = "unknown"
+        case 0:   meaning = "已请求文件日志（DEBUG）"
+        case -1:  meaning = "文件错误 —— Rust 拒绝了该路径"
+        case -2:  meaning = "已初始化 —— 之前的 idevice_init_logger 调用已生效，Rust 日志会停留在 console(Error)，永远不会写入文件"
+        case -3:  meaning = "无效的路径字符串"
+        case -99: meaning = "没有可用的 ideviceGateway"
+        default:  meaning = "未知"
         }
-        log("rust log → \(path): rc=\(rc) (\(meaning))")
+        log("Rust 日志 → \(path)：rc=\(rc)（\(meaning)）")
 
         // rc=0 only means the subscriber was installed; the file itself is
         // created by the first line the Rust side writes, so it is legitimately
@@ -141,12 +141,12 @@ class GoldenNuggetEngine {
             let fm = FileManager.default
             let parent = URL.documents.path
             let parentExists = fm.fileExists(atPath: parent)
-            log("rust log dir: \(parent) exists=\(parentExists) "
-                + "(file appears with the first Rust line)")
+            log("Rust 日志目录：\(parent) exists=\(parentExists) "
+                + "（文件会在写入第一行 Rust 日志时出现）")
             if !parentExists {
-                log("⚠️ the Rust log directory does not exist — no Rust evidence will be "
-                    + "written this session. This app is running somewhere its Documents "
-                    + "path is not writable.")
+                log("⚠️ Rust 日志目录不存在 —— 本次会话不会写入任何 "
+                    + "Rust 证据。此应用运行在 Documents "
+                    + "路径不可写的位置。")
             }
         }
         return rc
@@ -278,12 +278,12 @@ class GoldenNuggetEngine {
             // The count, then the parenthetical the reference's summary has: an
             // enabled-but-empty selection still writes a file, and the log has to
             // say so, or a reset reads as a no-op.
-            log("Status bar: \(statusBar.overrides.activeCount) override(s)"
-                + " \(statusBar.overrides.activeCount == 0 ? "(a reset)" : "") via "
-                + "\(mechanism == .classic ? "the classic struct" : "the iOS 27 archive") "
+            log("状态栏：\(statusBar.overrides.activeCount) 个覆盖项"
+                + "\(statusBar.overrides.activeCount == 0 ? "（未启用任何覆盖项）" : "")，通过"
+                + "\(mechanism == .classic ? "经典结构" : "iOS 27 归档") "
                 + "→ \(statusBarPayloads[0].label) (\(built.data.count) B)")
             for field in built.dropped {
-                log("  ⚠️ \(field) has no counterpart in the iOS 27 archive and was not delivered")
+                log("  ⚠️ \(field) 在 iOS 27 归档中没有对应项，未投递")
             }
         }
 
@@ -305,15 +305,15 @@ class GoldenNuggetEngine {
 
         guard !compiled.payloads.isEmpty || !skipSetup.payloads.isEmpty || posterBoard.isActive
                 || statusBar.isActive else {
-            throw GoldenNuggetError("Nothing to apply: no tweak is enabled (or every enabled one "
-                + "was skipped), skip setup is off, the status bar is untouched, and there is "
-                + "nothing selected on the PosterBoard page.")
+            throw GoldenNuggetError("没有可应用的内容：未启用任何调整项（或所有已启用的调整项"
+                + "均被跳过）、跳过设置已关闭、状态栏未改动，且"
+                + "海报板页面未选择任何内容。")
         }
-        log("Tweaks: \(compiled.payloads.count) file(s) from \(compiled.locations.count) plist(s)")
+        log("调整项：\(compiled.payloads.count) 个文件，来自 \(compiled.locations.count) 个 plist")
         for location in compiled.locations { log("  → \(location.rawValue)") }
-        for item in compiled.skipped { log("  ⚠️ skipped \(item.label): \(item.reason)") }
+        for item in compiled.skipped { log("  ⚠️ 已跳过 \(item.label)：\(item.reason)") }
         if !skipSetup.payloads.isEmpty {
-            log("Skip setup: \(skipSetup.payloads.count) file(s) ahead of the tweaks")
+            log("跳过设置：\(skipSetup.payloads.count) 个文件，位于调整项之前")
             for payload in skipSetup.payloads { log("  → \(payload.label)") }
             for warning in skipSetup.warnings { log("⚠️ \(warning)") }
         }
@@ -335,7 +335,7 @@ class GoldenNuggetEngine {
         // guess — a device whose version cannot be read must not be treated as iOS 26.
         let version = try await resolvedDeviceVersion(deviceVersion)
         let major = Int(version.split(separator: ".").first ?? "0") ?? 0
-        log("device version for the manifest-format fork: \(version) (major \(major))")
+        log("清单格式分支所用设备版本：\(version)（主版本 \(major)）")
 
         // PosterBoard, if the page has anything. Two mechanisms, chosen above:
         // the store's database first — a wallpaper exists only once it has a row in
@@ -345,23 +345,23 @@ class GoldenNuggetEngine {
         var posterBoardPayloads: [TweakPayload] = []
         var posterBoardInjectedOverAirlift = false
         if posterBoard.isActive && posterBoardMode == .airlift {
-            log("PosterBoard: \(posterBoard.describe) — over AirLift, no backup")
+            log("海报板：\(posterBoard.describe) —— 通过 AirLift，不走备份")
             try await applyPosterBoardOverAirlift(selection: posterBoard, deviceVersion: version)
             posterBoardInjectedOverAirlift = true
         } else if posterBoard.isActive {
-            log("PosterBoard: \(posterBoard.describe)")
+            log("海报板：\(posterBoard.describe)")
             var structureVersion = PosterBoard.fallbackStructureVersion
             var database: URL?
             if posterBoard.fullReset || !posterBoard.resetModes.isEmpty {
                 // A reset needs no database, so it needs no fetch and no exchange.
-                log("PosterBoard: reset only — no database is needed, and none is fetched.")
+                log("海报板：仅重置 —— 不需要数据库，也不会抓取。")
             } else {
                 let fetched = try await PosterBoardBackup.fetch(
                     backupRoot: AppPaths.posterBoardFetchRoot, udid: udid,
                     // The same fork `deliver` is about to take, from the same number.
                     ios27: major >= 27 && !DevSettings.effective.forcePartialRestore,
                     onProgress: { overall in
-                        self.logProgress("posterboard backup progress", overall)
+                        self.logProgress("海报板备份进度", overall)
                     },
                     log: { AppLog.write($0) })
                 database = fetched.database
@@ -376,7 +376,7 @@ class GoldenNuggetEngine {
                 log: { AppLog.write($0) })
             let onDisk = posterBoardPayloads.filter { $0.source != nil }.count
             let total = posterBoardPayloads.reduce(0) { $0 + $1.byteCount }
-            log("PosterBoard: \(posterBoardPayloads.count) payload(s), \(onDisk) of them on disk "
+            log("海报板：\(posterBoardPayloads.count) 个载荷，其中 \(onDisk) 个来自磁盘"
                 + "(\(ByteCountFormatter.string(fromByteCount: Int64(total), countStyle: .file)))")
         }
 
@@ -393,23 +393,23 @@ class GoldenNuggetEngine {
         // it resprings on its way out, so running the backup/restore tail here
         // would buy a full protective pull for an empty payload list.
         if payloads.isEmpty && posterBoardInjectedOverAirlift {
-            log("Apply succeeded: the wallpapers are in PosterBoard's container and it has "
-                + "resprung — no backup was taken.")
+            log("应用成功：墙纸已写入海报板的容器，并且"
+                + "已重新载入界面 —— 未执行备份。")
             return
         }
 
         try await deliver(payloads: payloads, udid: udid, version: version, label: "apply") {
-            log("Apply succeeded: the device confirmed it finished.")
-            log("Reboot the device so the injected preferences take effect.")
+            log("应用成功：设备已确认完成。")
+            log("请重启设备，使注入的偏好设置生效。")
             if posterBoardInjectedOverAirlift {
-                log("The wallpapers went in over AirLift and are already live; only the tweaks "
-                    + "above needed the reboot.")
+                log("墙纸已通过 AirLift 写入并已生效；只有上面的调整项"
+                    + "需要重启。")
             } else if posterBoard.fullReset || !posterBoard.resetModes.isEmpty {
-                log("The PosterBoard store was cleared. Reboot the device, then add wallpapers "
-                    + "from a fresh database fetch — a reset makes the copy fetched before it "
-                    + "stale.")
+                log("海报板存储已清空。请重启设备，然后从全新的数据库抓取中添加墙纸 —— "
+                    + "因为重置会让重置之前抓取的副本"
+                    + "失效。")
             } else if posterBoard.isActive {
-                log("Reboot the device so the PosterBoard store picks the new wallpapers up.")
+                log("请重启设备，让海报板存储识别到新墙纸。")
             }
         }
     }
@@ -421,18 +421,18 @@ class GoldenNuggetEngine {
     /// the alternative to accepting the selection and quietly dropping half of it.
     private func checkAirliftCanApply(posterBoard: PosterBoardSelection, deviceVersion: String) throws {
         if posterBoard.fullReset || !posterBoard.resetModes.isEmpty {
-            throw GoldenNuggetError("AirLift cannot reset the PosterBoard store — it only adds "
-                + "wallpapers. Switch the apply mode to \"Protective backup\" for a reset.")
+            throw GoldenNuggetError("AirLift 无法重置海报板存储 —— 它只能添加"
+                + "墙纸。要重置，请将应用模式切换为 \"保护性备份\"。")
         }
         if posterBoard.video != nil {
-            throw GoldenNuggetError("AirLift cannot apply a PosterBoard video: its frames are "
-                + "staged for a restore. Switch the apply mode to \"Protective backup\".")
+            throw GoldenNuggetError("AirLift 无法应用海报板视频：其帧需要"
+                + "为恢复流程暂存。请将应用模式切换为 \"保护性备份\"。")
         }
         let reason = Airlift.unsupportedReason(deviceVersion: deviceVersion)
         guard reason.isEmpty else { throw GoldenNuggetError(reason) }
         guard FileManager.default.fileExists(atPath: AppPaths.pairingFile.path) else {
-            throw GoldenNuggetError("AirLift needs a pairing record and none is stored. Import one "
-                + "on the home page first.")
+            throw GoldenNuggetError("AirLift 需要配对记录，但当前未存储。请先在主页"
+                + "导入一个。")
         }
     }
 
@@ -445,7 +445,7 @@ class GoldenNuggetEngine {
             deviceVersion: deviceVersion,
             pairingPath: AppPaths.pairingFile.path,
             log: { AppLog.write($0) },
-            progress: { overall in self.logProgress("posterboard airlift", overall) }
+            progress: { overall in self.logProgress("海报板 AirLift", overall) }
         )
     }
 
@@ -475,9 +475,9 @@ class GoldenNuggetEngine {
         let udid = try await prepareRun()
         _ = try await PosterBoardBackup.fetch(
             backupRoot: AppPaths.posterBoardFetchRoot, udid: udid,
-            onProgress: { overall in self.logProgress("posterboard backup progress", overall) },
+            onProgress: { overall in self.logProgress("海报板备份进度", overall) },
             log: { AppLog.write($0) })
-        log("PosterBoard database fetched and validated.")
+        log("海报板数据库已抓取并通过校验。")
     }
 
     /// Inject the PosterBoard packs over AirLift, and nothing else.
@@ -513,10 +513,10 @@ class GoldenNuggetEngine {
         defer { stage.done() }
 
         try checkAirliftCanApply(posterBoard: selection, deviceVersion: deviceVersion)
-        log("PosterBoard: \(selection.describe) — over AirLift, no backup")
+        log("海报板：\(selection.describe) —— 通过 AirLift，不走备份")
         try await applyPosterBoardOverAirlift(selection: selection, deviceVersion: deviceVersion)
-        log("PosterBoard: injected over AirLift and resprung. No backup was taken, and no "
-            + "tweak was delivered — the home page's Apply is what delivers those.")
+        log("海报板：已通过 AirLift 注入并重新载入界面。未执行备份，也没有"
+            + "投递任何调整项 —— 调整项由主页的“应用”负责投递。")
     }
 
     // MARK: - The shared delivery tail
@@ -551,10 +551,10 @@ class GoldenNuggetEngine {
         let ios27 = major >= 27 && !dev.forcePartialRestore
         // Reported before the fork, because this number *is* the fork: the
         // branch lines below say where the run went, this says why.
-        log("device version for the manifest-format fork: \(version) (major \(major))")
+        log("清单格式分支所用设备版本：\(version)（主版本 \(major)）")
         if dev.forcePartialRestore {
-            log("development mode: forcing the iOS 26 branch on a major \(major) device "
-                + "-- no protective backup will be pulled")
+            log("开发模式：在 iOS 主版本 \(major) 的设备上强制使用 iOS 26 分支 "
+                + "—— 不会拉取保护性备份")
         }
 
         // iOS 26: a Partial Restore, built rather than pulled -- an empty device
@@ -570,7 +570,7 @@ class GoldenNuggetEngine {
         let backupRoot: URL
         let prune: Bool
         if ios27 {
-            log("Manifest format: sqlite (iOS 27+ path), protective backup pulled")
+            log("清单格式：sqlite（iOS 27+ 路径），已拉取保护性备份")
             backupRoot = try await protectiveBackup(udid: udid)
             prune = true
             // Media over AFC, after the backup and before the prune: the backup
@@ -583,20 +583,20 @@ class GoldenNuggetEngine {
             // that choice is made with a count and a free-space figure in front
             // of the user.
             if dev.skipAfcMedia {
-                log("development mode: skipping the AFC media pull (Dev.SkipAfcMedia)")
+                log("开发模式：跳过 AFC 媒体拉取（Dev.SkipAfcMedia）")
             } else {
                 clearProgress()
-                log("AFC media: collecting media files…")
+                log("AFC 媒体：正在收集媒体文件…")
                 await mediaBackup(deletingOriginals: false)
             }
         } else {
-            log("Manifest format: legacy MBDB (iOS 26 path), built from nothing")
+            log("清单格式：传统 MBDB（iOS 26 路径），从零构建")
             backupRoot = try await partialRestore(udid: udid)
             prune = false
         }
 
         clearProgress()
-        log("Pruning and injecting tweaks…")
+        log("正在清理并注入调整项…")
         try await BackupInjector.pruneAndInject(
             backupRoot: backupRoot,
             udid: udid,
@@ -653,7 +653,7 @@ class GoldenNuggetEngine {
         defer { runStage.done() }
 
         guard !pages.isEmpty else {
-            throw GoldenNuggetError("No page was selected — nothing to reset.")
+            throw GoldenNuggetError("未选择任何页面 —— 无需重置。")
         }
 
         let udid = try await prepareRun()
@@ -668,7 +668,7 @@ class GoldenNuggetEngine {
 
         let plan = TweakReset.plan(pages: pages, ios27: ios27)
         guard !plan.payloads.isEmpty else {
-            throw GoldenNuggetError("Every selected page resolved to no file — nothing to reset.")
+            throw GoldenNuggetError("所选页面均未解析出文件 —— 无需重置。")
         }
 
         // The reference appends the skip-setup files to the *reset's* file list
@@ -685,39 +685,39 @@ class GoldenNuggetEngine {
             skipSetup = SkipSetup.build(supervised: false, organizationName: "")
         } else {
             skipSetup = SkipSetup.Build(payloads: [], warnings: [])
-            log("Skip Setup is on, but the reference omits its two files here: on iOS 27 "
-                + "the reset restores no real domain unless the Daemons page is ticked, "
-                + "and that is its `add_skip_setup` condition. Tick Daemons, or reset on "
-                + "iOS 26, to include them.")
+            log("“跳过设置”已开启，但参考实现在此省略了它的两个文件：在 iOS 27 上，"
+                + "除非勾选 Daemons 页面，重置不会恢复真实域，"
+                + "而这正是其 `add_skip_setup` 条件。请勾选 Daemons，或在 iOS 26 上"
+                + "重置，才能包含这两个文件。")
         }
 
-        log("Reset: \(pages.count) page(s) — \(plan.targets.count) file(s) on iOS \(version)")
+        log("重置：\(pages.count) 个页面 —— \(plan.targets.count) 个文件（iOS \(version)）")
         for target in plan.targets {
             log("  → \(target.path) [\(target.kind.rawValue), "
-                + "\(target.contents.count) bytes]")
+                + "\(target.contents.count) 字节]")
         }
-        for item in plan.skipped { log("  ⚠️ skipped \(item.label): \(item.reason)") }
+        for item in plan.skipped { log("  ⚠️ 已跳过 \(item.label)：\(item.reason)") }
         for page in ResetPage.allCases where pages.contains(page) {
-            log("  page \(page.title): \(page.locations.count) file(s)")
+            log("  页面 \(page.title)：\(page.locations.count) 个文件")
         }
         if ios27 {
-            log("iOS 27 branch: a nulled file is written as a valid empty plist, not 0 bytes — "
-                + "a truncated plist is a SpringBoard boot loop on this release. Nothing is read "
-                + "back from the device first: this is the reference's own no-capture fallback, "
-                + "not a psysbackup restore of the original values.")
+            log("iOS 27 分支：被置空的文件会写为合法的空 plist，而不是 0 字节 —— "
+                + "在此版本上，截断的 plist 会导致 SpringBoard 无限重启。不会先从设备"
+                + "读回任何内容：这是参考实现自身的无捕获回退，"
+                + "并非用 psysbackup 恢复原始值。")
         } else {
-            log("iOS 26 branch: a nulled file is written as 0 bytes, over a synthesised MBDB "
-                + "backup (no device content pulled).")
+            log("iOS 26 分支：被置空的文件会写为 0 字节，基于合成的 MBDB "
+                + "备份（未拉取设备内容）。")
         }
 
         let backupRoot: URL
         let prune: Bool
         if ios27 {
-            log("Manifest format: sqlite (iOS 27+ path), protective backup pulled, then pruned")
+            log("清单格式：sqlite（iOS 27+ 路径），已拉取保护性备份，随后清理")
             backupRoot = try await protectiveBackup(udid: udid)
             prune = true
         } else {
-            log("Manifest format: legacy MBDB (iOS 26 path), built from nothing")
+            log("清单格式：传统 MBDB（iOS 26 路径），从零构建")
             backupRoot = try await partialRestore(udid: udid)
             prune = false
         }
@@ -734,10 +734,10 @@ class GoldenNuggetEngine {
         )
 
         try await runRestore(backupRoot: backupRoot, udid: udid, label: "page reset") {
-            log("Reset succeeded: the device confirmed it finished.")
-            log("The pages above are back to their defaults. The selections in this app are "
-                + "untouched — applying again would write the tweaks back.")
-            log("Reboot the device so the restored files take effect.")
+            log("重置成功：设备已确认完成。")
+            log("以上页面已恢复默认值。此应用中的选择"
+                + "未受影响 —— 再次应用会把调整项写回去。")
+            log("请重启设备，使恢复的文件生效。")
         }
     }
 
@@ -747,22 +747,22 @@ class GoldenNuggetEngine {
         do {
             let survey = try await AfcMediaBackup.survey()
             guard !survey.files.isEmpty else {
-                log("AFC media: nothing in \(AfcMediaBackup.trees.joined(separator: "/")) "
-                    + "— skipped")
+                log("AFC 媒体：以下位置没有内容 \(AfcMediaBackup.trees.joined(separator: "/")) "
+                    + "—— 已跳过")
                 return
             }
-            log("AFC media: pulling \(survey.files.count) file(s), \(survey.bytes) byte(s)")
+            log("AFC 媒体：正在拉取 \(survey.files.count) 个文件，共 \(survey.bytes) 字节")
             let manifest = try await AfcMediaBackup.pull(deletingOriginals: deletingOriginals) {
                 self.log($0)
             }
             let removed = manifest.entries.filter(\.deleted).count
-            log("AFC media: stored \(manifest.entries.count) file(s), \(removed) removed "
-                + "from the device")
+            log("AFC 媒体：已存储 \(manifest.entries.count) 个文件，从设备移除了 \(removed) 个"
+                + "文件。")
         } catch {
             // Not fatal to the tweak apply. The store is a copy, not a
             // precondition for writing preferences, and a media failure must not
             // cost the user the tweak run they started.
-            log("AFC media: FAILED — \(error.localizedDescription)")
+            log("AFC 媒体：失败 —— \(error.localizedDescription)")
         }
         clearProgress()
     }
@@ -781,8 +781,8 @@ class GoldenNuggetEngine {
     private func partialRestore(udid: String) async throws -> URL {
         let backupRoot = AppPaths.fullBackupRoot(udid: udid)
         try resetDirectory(backupRoot)
-        log("Partial Restore: synthesising backup at \(backupRoot.lastPathComponent) "
-            + "(no device content pulled)")
+        log("部分恢复：正在 \(backupRoot.lastPathComponent) 处合成备份 "
+            + "（未拉取设备内容）")
         return backupRoot
     }
 
@@ -791,9 +791,9 @@ class GoldenNuggetEngine {
         let backupRoot = AppPaths.fullBackupRoot(udid: udid)
         try resetDirectory(backupRoot)
         try await ProtectiveBackup.run(backupRoot: backupRoot, udid: udid) { overall in
-            self.logProgress("backup progress", overall)
+            self.logProgress("备份进度", overall)
         }
-        log("Protective backup complete.")
+        log("保护性备份完成。")
         clearProgress()
         return backupRoot
     }
@@ -822,11 +822,11 @@ class GoldenNuggetEngine {
     /// previous run is still waiting on.
     private func warnIfPreviousCallStillRunning() {
         guard InFlightCall.shared.isBusy else { return }
-        log("⚠️ a previous device call is still running "
-            + "(\(InFlightCall.shared.abandonedDescription)) — starting a new run on top of it. "
-            + "If that call was cancelled it may still hold the session, so a failure from here that "
-            + "looks like a device problem may be two sessions sharing one RSD adapter: force-quit "
-            + "the app, then run again.")
+        log("⚠️ 上一个设备调用仍在运行 "
+            + "（\(InFlightCall.shared.abandonedDescription)）—— 将在此基础上启动新的运行。"
+            + "如果该调用已被取消，它可能仍持有会话；因此从这里出现的失败，"
+            + "看似设备问题，实际上可能是两个会话共用同一个 RSD 适配器：请强制退出"
+            + "应用，然后重新运行。")
     }
 
     /// Everything a run does before touching the device.
@@ -836,13 +836,13 @@ class GoldenNuggetEngine {
     private func prepareRun() async throws -> String {
         let minimuxer = Minimuxer.shared()
         guard await testReady(minimuxer) else {
-            throw GoldenNuggetError("minimuxer is not ready. Ensure WiFi and a working tunnel (LocalDevVPN or WireGuard + em_proxy), then select a pairing file.")
+            throw GoldenNuggetError("minimuxer 尚未就绪。请确保 WiFi 和可用隧道（LocalDevVPN 或 WireGuard + em_proxy），然后选择配对文件。")
         }
         guard let udid = try await minimuxer.core.fetchUDID() else {
-            throw GoldenNuggetError("Could not fetch device UDID")
+            throw GoldenNuggetError("无法获取设备 UDID")
         }
-        log("UDID: \(udid)")
-        log("Tunnel: \(Tunnel.describe())")
+        log("设备 UDID：\(udid)")
+        log("隧道：\(Tunnel.describe())")
         try await Diagnostics.preflightBackupEncryption()
         // Everything after this byte offset is this run's Rust output.
         markRustLog()
@@ -865,17 +865,17 @@ class GoldenNuggetEngine {
     /// operator a whole run plus a puzzle like this one.
     private func resolvedDeviceVersion(_ fallback: String) async throws -> String {
         if !fallback.isEmpty { return fallback }
-        log("device version: the caller had none (it read the identity before lockdown answered) "
-            + "— re-reading before the format fork")
+        log("设备版本：调用方未提供（它在 lockdown 应答前读取了身份） "
+            + "—— 在格式分支前重新读取")
         let identity = await DeviceIdentity.read()
         guard !identity.version.isEmpty else {
             throw GoldenNuggetError(
-                "Could not read the device's iOS version (lockdown ProductVersion), which this run "
-                + "needs to choose a manifest format: iOS 27+ gets a protective backup pulled from the "
-                + "device with a sqlite Manifest.db, iOS 26 a legacy MBDB backup synthesised on the "
-                + "host. Unlock the device, confirm the tunnel is up, then run again.")
+                "无法读取设备的 iOS 版本（lockdown ProductVersion），而本次运行"
+                + "需要它来选择清单格式：iOS 27+ 会从设备拉取保护性备份，并使用 "
+                + "sqlite Manifest.db；iOS 26 则在主机上合成传统 MBDB 备份。"
+                + "请解锁设备、确认隧道已建立，然后重新运行。")
         }
-        log("device version: lockdown answered \(identity.version)")
+        log("设备版本：lockdown 应答为 \(identity.version)")
         return identity.version
     }
 
@@ -917,7 +917,7 @@ class GoldenNuggetEngine {
         log(ManifestStore(deviceDir: deviceDir).auditAgainstDisk())
 
         clearProgress()
-        log("Restoring backup… (this is the stage that finalizes on the device)")
+        log("正在恢复备份…（这一步会在设备上完成收尾）")
         let code = try await ChannelRecovery.retry(
             label: label,
             attempts: 3,
@@ -931,7 +931,7 @@ class GoldenNuggetEngine {
         } else {
             // Unreachable while RestoreRunner verifies its own outcome, but kept
             // so a future path that stops doing so cannot fail silently.
-            log("restore returned \(code) without confirming completion — inspect the log above.")
+            log("恢复返回了 \(code)，但未确认完成 —— 请检查上方的日志。")
         }
     }
 

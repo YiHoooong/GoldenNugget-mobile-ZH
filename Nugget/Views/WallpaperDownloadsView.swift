@@ -28,7 +28,7 @@ struct WallpaperDownloadsView: View {
     @State private var search = ""
 
     @State private var wallpapers: [Wallpaper] = []
-    @State private var status = "Loading wallpapers…"
+    @State private var status = "正在加载墙纸…"
     @State private var statusTone: GoldenTone = .secondary
     @State private var error: String?
     @State private var loading = false
@@ -69,8 +69,8 @@ struct WallpaperDownloadsView: View {
                 if error != nil { errorCard }
                 if visible.isEmpty && !loading {
                     NativeNote(wallpapers.isEmpty
-                        ? "No wallpapers found. The catalogs are community-run and one of them may be down — the other source is still listed above."
-                        : "Nothing matches “\(search.trimmingCharacters(in: .whitespacesAndNewlines))”.")
+                        ? "未找到墙纸。这些目录由社区维护，其中一个可能已不可用——另一个来源仍列在上方。"
+                        : "没有匹配 “\(search.trimmingCharacters(in: .whitespacesAndNewlines))” 的结果。")
                 } else {
                     grid
                 }
@@ -81,7 +81,7 @@ struct WallpaperDownloadsView: View {
             .padding(.horizontal, 16)
         }
         .background(Color(uiColor: .systemGroupedBackground))
-        .navigationTitle("Download Wallpapers")
+        .navigationTitle("下载墙纸")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -90,7 +90,7 @@ struct WallpaperDownloadsView: View {
                 } label: {
                     Image(systemName: "arrow.clockwise")
                 }
-                .accessibilityLabel("Reload catalog")
+                .accessibilityLabel("重新加载目录")
                 .disabled(loading || importing != nil)
             }
         }
@@ -112,7 +112,7 @@ struct WallpaperDownloadsView: View {
 
     private var controlsCard: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Picker("Source", selection: $source) {
+            Picker("来源", selection: $source) {
                 ForEach(WallpaperSource.allCases) { source in
                     Text(source.label).tag(source)
                 }
@@ -124,7 +124,7 @@ struct WallpaperDownloadsView: View {
             // and disables it; a disabled segmented control on a phone is a row
             // of dead pixels, so it is hidden instead.
             if !source.categories.isEmpty {
-                Picker("Category", selection: $category) {
+                Picker("分类", selection: $category) {
                     ForEach(source.categories) { category in
                         Text(category.label).tag(category)
                     }
@@ -134,7 +134,7 @@ struct WallpaperDownloadsView: View {
 
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
-                TextField("Search name or author", text: $search)
+                TextField("搜索名称或作者", text: $search)
                     .textFieldStyle(.plain)
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.never)
@@ -146,7 +146,7 @@ struct WallpaperDownloadsView: View {
                         Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("Clear search")
+                    .accessibilityLabel("清除搜索")
                 }
             }
             .padding(.horizontal, 12)
@@ -173,7 +173,7 @@ struct WallpaperDownloadsView: View {
 
     private var errorCard: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Label("Something went wrong", systemImage: "exclamationmark.triangle.fill")
+            Label("出了点问题", systemImage: "exclamationmark.triangle.fill")
                 .font(.subheadline.bold())
                 .foregroundStyle(GoldenTone.error.nativeColor)
             if let error {
@@ -213,16 +213,16 @@ struct WallpaperDownloadsView: View {
 
     private var notesCard: some View {
         VStack(alignment: .leading, spacing: 8) {
-            NativeNote("A card downloads the wallpaper's `.tendies` pack and imports it "
-                + "into this app. It shows up on the PosterBoard page straight away; "
-                + "nothing is written to the device until you press Apply there.")
-            NativeNote("Upstream caps a selection at \(PosterBoardImports.descriptorLimit) "
-                + "descriptors, so an import past the cap is refused rather than "
-                + "silently dropped. Each pack is copied into this app — removing it on "
-                + "the PosterBoard page removes the copy, not the original file.")
-            NativeNote("Catalogs are cached for \(Int(WallpaperCatalog.catalogTTL / 60)) "
-                + "minutes; the reload button throws the cache away and asks again. "
-                + "Previews are cached until iOS reclaims them.")
+            NativeNote("点按卡片会下载墙纸的 `.tendies` 包并将其"
+                + "导入本应用。它会立即出现在海报板页面；"
+                + "在你于该页面点按“应用”之前，不会向设备写入任何内容。")
+            NativeNote("上游将选择上限设为 \(PosterBoardImports.descriptorLimit) "
+                + "个描述符，因此超过上限的导入会被拒绝，而不是"
+                + "被静默丢弃。每个包都会复制到本应用中——在海报板页面移除它，"
+                + "移除的是副本，而不是原始文件。")
+            NativeNote("目录缓存 \(Int(WallpaperCatalog.catalogTTL / 60)) "
+                + "分钟；重新加载按钮会丢弃缓存并重新请求。"
+                + "预览会一直缓存，直到 iOS 回收它们。")
         }
     }
 
@@ -231,26 +231,26 @@ struct WallpaperDownloadsView: View {
     private func load() async {
         loading = true
         error = nil
-        status = "Loading wallpapers…"
+        status = "正在加载墙纸…"
         statusTone = .secondary
         let result = await WallpaperCatalog.load(source: source, category: category)
         wallpapers = result.wallpapers
         loading = false
 
         if result.wallpapers.isEmpty {
-            status = result.failures.isEmpty ? "No wallpapers found" : "Failed to load wallpapers"
+            status = result.failures.isEmpty ? "未找到墙纸" : "加载墙纸失败"
             statusTone = result.failures.isEmpty ? .secondary : .error
         } else {
-            status = "\(result.wallpapers.count) wallpapers"
+            status = "\(result.wallpapers.count) 张墙纸"
                 + (result.failures.isEmpty ? "" : " (\(result.failures.joined(separator: "; ")))")
             statusTone = result.failures.isEmpty ? .secondary : .warning
         }
         // A source that failed while another answered is worth a line in the log
         // as well as in the status: the status is overwritten by the next action,
         // and the log is what the user can scroll back through.
-        for failure in result.failures { RunLog.shared.append("Wallpapers: \(failure)") }
-        RunLog.shared.append("Wallpapers: \(result.wallpapers.count) from "
-            + "\(source.label)\(result.fromCache ? " (cached)" : "")")
+        for failure in result.failures { RunLog.shared.append("墙纸：\(failure)") }
+        RunLog.shared.append("墙纸：已加载 \(result.wallpapers.count) 个，来自 "
+            + "\(source.label)\(result.fromCache ? "（已缓存）" : "")")
     }
 
     /// Throw the cached catalogs away and ask the network — the toolbar button.
@@ -269,7 +269,7 @@ struct WallpaperDownloadsView: View {
         guard importing == nil else { return }
         importing = wallpaper.id
         error = nil
-        status = "Downloading \(wallpaper.name)…"
+        status = "正在下载 \(wallpaper.name)…"
         statusTone = .secondary
 
         Task {
@@ -278,7 +278,7 @@ struct WallpaperDownloadsView: View {
             do {
                 file = try await WallpaperCatalog.download(wallpaper)
             } catch {
-                fail("\(wallpaper.name) could not be downloaded: \(error.localizedDescription)")
+                fail("\(wallpaper.name) 无法下载：\(error.localizedDescription)")
                 return
             }
             do {
@@ -286,24 +286,24 @@ struct WallpaperDownloadsView: View {
                 let pack = try PosterBoardImports.import(from: file)
                 guard existing + pack.descriptorCount <= PosterBoardImports.descriptorLimit else {
                     PosterBoardImports.remove(pack)
-                    throw GoldenNuggetError("\(pack.name) carries \(pack.descriptorCount) "
-                        + "descriptor(s), which would take the selection to "
-                        + "\(existing + pack.descriptorCount). PosterBoard's picker gets "
-                        + "unusable past \(PosterBoardImports.descriptorLimit) — remove a pack "
-                        + "on the PosterBoard page first.")
+                    throw GoldenNuggetError("\(pack.name) 包含 \(pack.descriptorCount) "
+                        + "个描述符，会使所选内容达到 "
+                        + "\(existing + pack.descriptorCount) 个。海报板的选择器超过 "
+                        + "\(PosterBoardImports.descriptorLimit) 个后将不可用——请先"
+                        + "在海报板页面移除一个包。")
                 }
                 selection.loadFromDisk()
-                status = "Imported \(wallpaper.name)"
+                status = "已导入 \(wallpaper.name)"
                 statusTone = .success
-                RunLog.shared.append("Wallpapers: imported \(pack.name) (\(pack.summary)) "
-                    + "from \(wallpaper.sourceLabel)")
+                RunLog.shared.append("Wallpapers: 已导入 \(pack.name)（\(pack.summary)）"
+                    + "，来源 \(wallpaper.sourceLabel)")
                 // Same question as on the PosterBoard page: the reference asks on
                 // the way into the tendie list, not per import route.
                 if let prompt = pack.legacyConvertPrompt(deviceVersion: deviceVersion) {
                     legacyPrompt = prompt
                 }
             } catch {
-                fail("Could not import \(wallpaper.name): \(error.localizedDescription)")
+                fail("无法导入 \(wallpaper.name)：\(error.localizedDescription)")
             }
             // The copy in `PosterBoardImports` is the one that is kept; this is
             // the transfer's scratch file, in the temporary directory.
@@ -313,9 +313,9 @@ struct WallpaperDownloadsView: View {
 
     private func fail(_ message: String) {
         error = message
-        status = "Import failed"
+        status = "导入失败"
         statusTone = .error
-        RunLog.shared.append("Wallpapers: \(message)")
+        RunLog.shared.append("墙纸：\(message)")
     }
 
     /// Store the Convert / Install-as-is answer for a downloaded pack.
@@ -328,10 +328,10 @@ struct WallpaperDownloadsView: View {
         _ = prompt.pack.settingAutoConvert(convert)
         selection.loadFromDisk()
         RunLog.shared.append(convert
-            ? "Wallpapers: \(prompt.pack.name) will be converted to the modern format on Apply "
-                + "(legacy: \(prompt.families.joined(separator: ", ")))."
-            : "Wallpapers: \(prompt.pack.name) stays in its original legacy format "
-                + "(\(prompt.families.joined(separator: ", "))).")
+            ? "Wallpapers: \(prompt.pack.name) 将在应用时转换为现代格式"
+                + "（旧版：\(prompt.families.joined(separator: ", ")) 等格式）。"
+            : "Wallpapers: \(prompt.pack.name) 将保留其原始旧版格式"
+                + "（家族：\(prompt.families.joined(separator: ", ")) 按旧版处理）。")
     }
 }
 

@@ -131,15 +131,15 @@ public func alGetGrappaToken(
     let token = GrappaToken.token
 
     guard let outBuffer, maxLength > 0 else {
-        GrappaToken.fail("invalid output buffer", errorBuffer, errorLength)
+        GrappaToken.fail("输出缓冲区无效", errorBuffer, errorLength)
         return -1
     }
     guard !token.isEmpty else {
-        GrappaToken.fail("failed to obtain valid Grappa token", errorBuffer, errorLength)
+        GrappaToken.fail("无法获取有效的 Grappa token", errorBuffer, errorLength)
         return -5
     }
     guard token.count <= maxLength else {
-        GrappaToken.fail("buffer too small: \(token.count) > \(maxLength)", errorBuffer, errorLength)
+        GrappaToken.fail("缓冲区太小：\(token.count) > \(maxLength)", errorBuffer, errorLength)
         return -6
     }
 

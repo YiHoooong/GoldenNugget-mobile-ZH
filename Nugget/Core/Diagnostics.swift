@@ -13,19 +13,19 @@ enum Diagnostics {
     /// log alone tells us where the failure lives.
     static func report() async -> String {
         let minimuxer = Minimuxer.shared()
-        var lines: [String] = ["── diagnostics ──"]
+        var lines: [String] = ["── 诊断信息 ──"]
 
         // Snapshot the Rust evidence FIRST.
         let logStatus = RustLog.status()
         let excerpt = RustLog.excerpt()
         let tail = RustLog.tail(30, since: RustLog.mark)
 
-        lines.append("  tunnel: \(Tunnel.describe())")
+        lines.append("  隧道：\(Tunnel.describe())")
         // The one field a user gets wrong, with the value that fixes it.  A dump
         // that says "tunnel not detected" and nothing else sends the reader to
         // the VPN app, where the rejection they get back ("only allows a prefix
         // length from 0 to 32") does not name the field or the expected value.
-        lines.append("  tunnel requires: \(Tunnel.requirements)")
+        lines.append("  隧道要求：\(Tunnel.requirements)")
         // What the library itself resolved, when it said anything: the app's
         // probe and the Rust connection manager have to be looking at the same
         // pair of addresses, and before this was recorded nothing in a dump
@@ -33,13 +33,13 @@ enum Diagnostics {
         if let resolved = Tunnel.reported.line {
             lines.append("  \(resolved)")
         }
-        lines.append("  peer \(Tunnel.peerIP):\(Tunnel.servicePort) reachable: \(Tunnel.probePeer())")
+        lines.append("  对端 \(Tunnel.peerIP):\(Tunnel.servicePort) 可达：\(Tunnel.probePeer())")
         if let gw = minimuxer.ideviceGateway {
-            lines.append("  gateway endpoint IP: \(gw.deviceEndpointIp ?? "nil")")
+            lines.append("  网关端点 IP：\(gw.deviceEndpointIp ?? "nil")")
         } else {
-            lines.append("  gateway: not IdeviceGateway")
+            lines.append("  网关：不是 IdeviceGateway")
         }
-        lines.append("  pairing type: \(minimuxer.core.getPairingFileType())")
+        lines.append("  配对类型：\(minimuxer.core.getPairingFileType())")
         // Proves whether RSD itself survived: if this works while mobilebackup2
         // keeps dying, the drop is mobilebackup2-specific (device side), not
         // the tunnel.
@@ -50,28 +50,28 @@ enum Diagnostics {
         } else {
             lines.append("  isReady: FAILED")
         }
-        lines.append("  rust log: \(logStatus)")
+        lines.append("  Rust 日志：\(logStatus)")
         // Wire liveness: how many DeviceLink messages this run actually moved.
         // A run that "hung at N %" is one number away from being diagnosable —
         // zero messages means the device never engaged, thousands means it was
         // working and the silence came later.
-        lines.append("  wire: \(WireCensus.healthLine())")
+        lines.append("  通信：\(WireCensus.healthLine())")
         let encrypt = await backupEncryptionEnabled()
-        lines.append("  backup encryption (com.apple.mobile.backup/WillEncrypt): "
-            + (encrypt.map { $0 ? "ON — premise broken (encrypted Manifest.db)" : "off" } ?? "unknown"))
+        lines.append("  备份加密（com.apple.mobile.backup/WillEncrypt）："
+            + (encrypt.map { $0 ? "开启 — 前提被破坏（Manifest.db 已加密）" : "关闭" } ?? "未知"))
         // Keyword slice first (the actual evidence), raw tail last (proves the
         // sink is live and shows an unclassified failure).  Both were captured
         // before the probes above wrote a single line.
         lines.append(excerpt)
-        lines.append("  rust log raw tail (last 30 lines):\n\(tail)")
+        lines.append("  Rust 日志原始尾部（最后 30 行）：\n\(tail)")
         // The host-side half of the story only exists in the app log: which
         // files the filter kept, the commit/move accounting, the staging-tree
         // verdict.  Without it a shared diagnostics.txt cannot distinguish "the
         // device refused" from "we refused the device".
         let memory = AppLog.shared.memory
-        lines.append("  app log tail (last 80 of \(memory.count) lines, full file: goldennugget.log):\n"
+        lines.append("  应用日志尾部（共 \(memory.count) 行中的最后 80 行，完整文件：goldennugget.log）：\n"
             + memory.tail(80))
-        lines.append("── end diagnostics ──")
+        lines.append("── 诊断信息结束 ──")
 
         let block = lines.joined(separator: "\n")
         // Persist next to the log so it can be shared as a FILE (AirDrop / Save
@@ -97,18 +97,18 @@ enum Diagnostics {
     ///     could not answer.
     static func deviceLivenessProbe() async -> (alive: Bool, detail: String) {
         guard let gateway = Minimuxer.shared().ideviceGateway else {
-            return (true, "no gateway to probe with — treating the device as alive")
+            return (true, "没有网关可供探测 — 按设备仍然在线处理")
         }
         let answer: Bool? = await AsyncRacing.withDeadline(seconds: 8, fallback: { nil }) {
             await Task.detached(priority: .utility) { gateway.probeLockdownAlive() }.value
         }
         switch answer {
         case .some(true):
-            return (true, "lockdown answered on the existing RSD session — device and tunnel are alive")
+            return (true, "lockdown 在现有 RSD 会话上应答 — 设备与隧道均在线")
         case .some(false):
-            return (false, "lockdown did not answer on the existing RSD session — the device or tunnel is gone")
+            return (false, "lockdown 未在现有 RSD 会话上应答 — 设备或隧道已断开")
         case .none:
-            return (true, "the lockdown probe did not answer within 8s — inconclusive, so the run is kept alive")
+            return (true, "lockdown 探测在 8 秒内没有应答 — 结果不确定，因此保留本次运行")
         }
     }
 
@@ -140,20 +140,19 @@ enum Diagnostics {
         switch await backupEncryptionEnabled() {
         case .some(true):
             throw GoldenNuggetError("""
-                This device has "Encrypt local backup" turned on (lockdown \
-                com.apple.mobile.backup / WillEncrypt = true).
-                GoldenNugget's premise is a plaintext Manifest.db: prune and inject rewrite it \
-                through bare sqlite3, and the vendored Rust library has no encrypt/keybag handling \
-                at all (pymobiledevice3's path decrypts first, prunes, then re-encrypts).
-                Turn "Encrypt local backup" off in Settings → [your name] → iCloud → Device \
-                Backup, or clear it on the device page in Finder/iTunes, then run again.
+                此设备已开启“加密本地备份”（lockdown com.apple.mobile.backup / WillEncrypt = true）。
+                GoldenNugget 的前提是明文 Manifest.db：修剪与注入直接用 sqlite3 重写它，
+                而内置的 Rust 库完全没有加密/keybag 处理（pymobiledevice3 的流程是先解密、
+                再修剪、最后重新加密）。
+                请前往“设置”→“[你的名字]”→“iCloud”→“设备备份”关闭“加密本地备份”，
+                或在 Finder/iTunes 的设备页面中清除该设置，然后重试。
                 """)
         case .some(false):
-            AppLog.write("preflight: encrypted local backup = OFF (plaintext Manifest.db, "
-                         + "premise holds)")
+            AppLog.write("预检：本地备份未加密（Manifest.db 为明文，"
+                         + "前提成立）")
         case .none:
-            AppLog.write("preflight: WillEncrypt could not be read (domain/key unavailable) "
-                         + "— continuing, but note that an encrypted backup breaks prune/inject")
+            AppLog.write("预检：无法读取 WillEncrypt（域/键不可用）"
+                         + "— 继续运行，但请注意加密备份会破坏修剪/注入流程")
         }
     }
 }

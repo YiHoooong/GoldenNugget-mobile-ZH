@@ -92,14 +92,14 @@ enum AfcMediaBackup {
 
         for tree in trees {
             guard let root = try? await gateway.afcEntryInfo(path: "/" + tree) else {
-                AppLog.write("AFC media: /\(tree) is not listed — skipped")
+                AppLog.write("AFC 媒体：/\(tree) 未列出 —— 已跳过")
                 continue
             }
             // Was `guard !root.isDirectory else { continue }`, which skipped every
             // tree exactly when it was a directory -- i.e. always. The survey
             // came back empty for every device, which is why AFC "saw no photos".
             guard root.isDirectory else {
-                AppLog.write("AFC media: /\(tree) is not a directory — skipped")
+                AppLog.write("AFC 媒体：/\(tree) 不是目录 —— 已跳过")
                 continue
             }
             for entry in try await walk(gateway, path: "/" + tree) {
@@ -171,8 +171,8 @@ enum AfcMediaBackup {
                 try? FileManager.default.removeItem(at: partial)
                 // Fatal: the store is the only copy once originals are deleted.
                 throw GoldenNuggetError(
-                    "AFC media: \(entry.path) failed after \(written) byte(s) — "
-                    + "no original was removed.")
+                    "AFC 媒体：\(entry.path) 写入 \(written) 字节后失败 —— "
+                    + "未删除任何原始文件。")
             }
 
             // Verify before the irreversible half. The device's own size is the
@@ -182,8 +182,8 @@ enum AfcMediaBackup {
             guard copied == entry.size, written == entry.size else {
                 try? FileManager.default.removeItem(at: partial)
                 throw GoldenNuggetError(
-                    "AFC media: \(entry.path) size mismatch — device reports "
-                    + "\(entry.size), wrote \(copied) / \(written). Original kept.")
+                    "AFC 媒体：\(entry.path) 大小不匹配 —— 设备报告 "
+                    + "\(entry.size)，已写入 \(copied) / \(written)。原始文件已保留。")
             }
 
             try? FileManager.default.removeItem(at: destination)
@@ -197,7 +197,7 @@ enum AfcMediaBackup {
                 } catch {
                     // The copy is already verified, so a failed delete is a
                     // lesser problem than the reverse and is reported, not fatal.
-                    onProgress?("AFC media: could not remove \(entry.path) — copy is intact")
+                    onProgress?("AFC 媒体：无法删除 \(entry.path) —— 副本完好")
                 }
             }
 
@@ -206,13 +206,13 @@ enum AfcMediaBackup {
                 modified: entry.modified, deleted: deleted))
 
             done += entry.size
-            onProgress?("AFC media: \(relative) — "
+            onProgress?("AFC 媒体：\(relative) —— "
                 + "\(ByteCountFormatter.string(fromByteCount: entry.size, countStyle: .file)), "
-                + "total \(ByteCountFormatter.string(fromByteCount: done, countStyle: .file))")
+                + "总计 \(ByteCountFormatter.string(fromByteCount: done, countStyle: .file))")
         }
 
         if survey.skippedSymlinks > 0 {
-            onProgress?("AFC media: skipped \(survey.skippedSymlinks) symlink(s)")
+            onProgress?("AFC 媒体：已跳过 \(survey.skippedSymlinks) 个符号链接")
         }
         try write(manifest)
         return manifest
@@ -232,7 +232,7 @@ enum AfcMediaBackup {
         for entry in manifest.entries {
             let local = storeRoot.appendingPathComponent(entry.storedAs, conformingTo: .data)
             guard FileManager.default.fileExists(atPath: local.path) else {
-                onProgress?("AFC push: missing \(entry.storedAs) — skipped")
+                onProgress?("AFC 推送：缺少 \(entry.storedAs) —— 已跳过")
                 skipped += 1
                 continue
             }
@@ -252,8 +252,8 @@ enum AfcMediaBackup {
             let size = (try? FileManager.default
                 .attributesOfItem(atPath: local.path)[.size] as? NSNumber)??.int64Value ?? 0
             guard size <= Self.inlineWriteLimit else {
-                onProgress?("AFC push: \(entry.storedAs) is \(size) byte(s) — too large "
-                    + "to write over AFC (limit \(Self.inlineWriteLimit)); left on the device")
+                onProgress?("AFC 推送：\(entry.storedAs) 为 \(size) 字节 —— 过大，无法 "
+                    + "通过 AFC 写入（上限 \(Self.inlineWriteLimit)）；已保留在设备上")
                 skipped += 1
                 continue
             }
@@ -266,15 +266,15 @@ enum AfcMediaBackup {
             // later as a truncated photo.
             let written = (try? await gateway.afcEntryInfo(path: entry.source))?.size ?? -1
             guard written == size else {
-                onProgress?("AFC push: \(entry.source) size mismatch — device reports "
-                    + "\(written), expected \(size)")
+                onProgress?("AFC 推送：\(entry.source) 大小不匹配 —— 设备报告 "
+                    + "\(written)，预期 \(size)")
                 skipped += 1
                 continue
             }
             restored += 1
-            onProgress?("AFC push: \(entry.source)")
+            onProgress?("AFC 推送：\(entry.source)")
         }
-        onProgress?("AFC push: \(restored) restored, \(skipped) skipped")
+        onProgress?("AFC 推送：已恢复 \(restored) 个，跳过 \(skipped) 个")
     }
 
     /// `/DCIM/100APPLE/IMG_0001.JPG` -> `["/DCIM", "/DCIM/100APPLE"]`, outermost
@@ -325,7 +325,7 @@ enum AfcMediaBackup {
 
     private static func gateway() async throws -> IdeviceGateway {
         guard let gateway = Minimuxer.shared().ideviceGateway else {
-            throw GoldenNuggetError("AFC media: no idevice gateway — is the tunnel up?")
+            throw GoldenNuggetError("AFC 媒体：没有 idevice 网关 —— 隧道是否已启动？")
         }
         return gateway
     }

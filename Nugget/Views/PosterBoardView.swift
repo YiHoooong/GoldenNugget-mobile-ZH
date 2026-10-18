@@ -36,7 +36,7 @@ struct PosterBoardView: View {
     @Binding var selection: PosterBoardSelection
 
     @State private var identity: DeviceIdentity = .unknown
-    @State private var databaseSummary = "not checked yet"
+    @State private var databaseSummary = "尚未检查"
     @State private var pickError: String?
     /// Only the database fetch runs from this page — the apply is the home page's.
     @State private var status: String?
@@ -87,7 +87,7 @@ struct PosterBoardView: View {
             RunLogCard()
         }
         .listStyle(.insetGrouped)
-        .navigationTitle("PosterBoard")
+        .navigationTitle("海报板")
         .navigationBarTitleDisplayMode(.inline)
         // Loading the pack list and the database state is a directory walk and a
         // file stat, so it happens here and not in `body`. `loadFromDisk` is idempotent
@@ -121,10 +121,10 @@ struct PosterBoardView: View {
         // and the apply re-reads it too.
         _ = prompt.pack.settingAutoConvert(convert)
         RunLog.shared.append(convert
-            ? "PosterBoard: \(prompt.pack.name) will be converted to the modern format on Apply "
-                + "(legacy: \(prompt.families.joined(separator: ", ")))."
-            : "PosterBoard: \(prompt.pack.name) stays in its original legacy format "
-                + "(\(prompt.families.joined(separator: ", "))).")
+            ? "PosterBoard: \(prompt.pack.name) 将在应用时转换为现代格式"
+                + "（旧版：\(prompt.families.joined(separator: ", ")) 等格式）。"
+            : "PosterBoard: \(prompt.pack.name) 将保留其原始旧版格式"
+                + "（家族：\(prompt.families.joined(separator: ", ")) 按旧版处理）。")
         selection.loadFromDisk()
     }
 
@@ -134,9 +134,9 @@ struct PosterBoardView: View {
         Section {
             Text(identity.describe)
                 .font(.headline)
-            NativeNote("Wallpapers are delivered as files into this app's own backup "
-                + "of the device, in the \(PosterBoard.domain) domain — the same channel the "
-                + "tweaks use. Nothing is written to the device until Apply.")
+            NativeNote("墙纸以文件形式进入本应用自己的设备备份，"
+                + "位于 \(PosterBoard.domain) 域——与调整项"
+                + "使用的通道相同。在你点按“应用”之前，不会向设备写入任何内容。")
         }
     }
 
@@ -151,7 +151,7 @@ struct PosterBoardView: View {
     /// saves.
     private var applyModeSection: some View {
         Section {
-            Picker("How to apply", selection: $applyMode) {
+            Picker("应用方式", selection: $applyMode) {
                 ForEach(PosterBoardApplyMode.allCases) { mode in
                     Text(mode.title).tag(mode)
                 }
@@ -164,13 +164,13 @@ struct PosterBoardView: View {
                 NativeSafetyNote(airliftBlocker)
             }
             if applyMode == .airlift {
-                NativeNote("The store database is not part of this mode, so its card "
-                    + "is hidden: the injection writes the descriptors straight into the "
-                    + "container and the rows are not touched. Automatic refresh is ignored too.")
+                NativeNote("此模式不涉及存储数据库，因此其卡片会"
+                    + "被隐藏：注入会将描述符直接写入"
+                    + "容器，不会改动数据库行。自动刷新也会被忽略。")
             }
             if !selection.resetModes.isEmpty, !applyMode.supportsReset {
-                NativeSafetyNote("The reset you have selected cannot be done over AirLift. "
-                    + "Switch back to Protective backup to keep it.")
+                NativeSafetyNote("你选择的重置无法通过 AirLift 完成。"
+                    + "请切换回“保护性备份”以保留它。")
             }
         }
     }
@@ -183,19 +183,19 @@ struct PosterBoardView: View {
         let reason = Airlift.unsupportedReason(deviceVersion: identity.version)
         if !reason.isEmpty { return reason }
         if !FileManager.default.fileExists(atPath: AppPaths.pairingFile.path) {
-            return "AirLift needs a pairing record and none is stored. Import one on the home page."
+            return "AirLift 需要配对记录，但目前尚未存储。请在主页导入一个。"
         }
         return ""
     }
 
     private var databaseSection: some View {
-        Section("Store database") {
-            Toggle("Automatic refresh", isOn: $selection.autoRefresh)
+        Section("存储数据库") {
+            Toggle("自动刷新", isOn: $selection.autoRefresh)
             Button {
                 fetchDatabase()
             } label: {
                 HStack {
-                    Label("Fetch database from device", systemImage: "arrow.down.circle")
+                    Label("从设备获取数据库", systemImage: "arrow.down.circle")
                     Spacer()
                     if running { ProgressView().controlSize(.small) }
                 }
@@ -207,16 +207,16 @@ struct PosterBoardView: View {
 
     private var databaseNote: String {
         var lines = [
-            "Fetched database: \(databaseSummary)",
-            "A wallpaper exists in two places at once — its descriptor files, and three rows in "
-                + "the store's own sqlite. The rows carry the device's provider registrations "
-                + "and the metadata the picker sorts by, so they cannot be invented: the apply "
-                + "fetches the store from the device first and adds rows to a copy of it.",
+            "已获取的数据库：\(databaseSummary)",
+            "一张墙纸同时存在于两个位置——其描述符文件，以及"
+                + "存储自身 sqlite 中的三行记录。这些行携带设备的提供程序注册信息"
+                + "以及选择器排序所用的元数据，因此无法凭空生成：应用时会"
+                + "先从设备获取存储，然后向其副本添加行。",
         ]
         if selection.autoRefresh {
-            lines.append("Automatic refresh is on (upstream's default): each apply also writes "
-                + "PBF_RESET_FILE_PROTECTIONS, which is what makes PosterBoard re-read the "
-                + "store at boot. Turn it off to leave the device's preferences alone.")
+            lines.append("自动刷新已开启（上游默认值）：每次应用还会写入 "
+                + "PBF_RESET_FILE_PROTECTIONS，它使海报板"
+                + "在启动时重新读取存储。关闭它可保持设备的偏好设置不变。")
         }
         return lines.joined(separator: "\n\n")
     }
@@ -224,20 +224,20 @@ struct PosterBoardView: View {
     // MARK: - Packs
 
     private var packsSection: some View {
-        Section("Wallpaper packs (\(selection.tendies.count))") {
+        Section("墙纸包（\(selection.tendies.count)）") {
             // The desktop build opens the wallpaper downloader from right here
             // (`wallpaper_downloader.py`, reached from this page's own button),
             // and the entry point stayed here when the sidebar row was dropped:
             // the downloader edits this section's own selection, so the row in the
             // packs list is the one place a reader is looking for it.
             NavigationLink(value: AppDestination.wallpaperDownloads) {
-                Label("Download Wallpapers", systemImage: "square.and.arrow.down")
+                Label("下载墙纸", systemImage: "square.and.arrow.down")
             }
             .disabled(running)
             Button {
                 showPackImporter = true
             } label: {
-                Label("Import .tendies pack", systemImage: "plus.circle")
+                Label("导入 .tendies 包", systemImage: "plus.circle")
             }
             .disabled(running)
             // Keep each document picker attached to the control that presents it.
@@ -247,9 +247,9 @@ struct PosterBoardView: View {
                 importPack(result)
             }
             if selection.tendies.isEmpty {
-                NativeNote("No packs imported yet. A `.tendies` file is a ZIP "
-                    + "holding a wallpaper's descriptor; import one from a wallpaper "
-                    + "collection (Cowabunga and CaPlayground publish them), then Apply.")
+                NativeNote("尚未导入任何包。`.tendies` 文件是一个 ZIP，"
+                    + "其中包含墙纸的描述符；可从墙纸"
+                    + "合集（Cowabunga 和 CaPlayground 会发布）导入一个，然后点按“应用”。")
             } else {
                 ForEach(selection.tendies) { pack in
                     packRow(pack)
@@ -258,19 +258,19 @@ struct PosterBoardView: View {
                     selection.tendies.forEach(PosterBoardImports.remove)
                     selection.loadFromDisk()
                 } label: {
-                    Label("Remove all packs", systemImage: "trash")
+                    Label("移除所有包", systemImage: "trash")
                 }
                 .disabled(running)
-                NativeNote("Upstream caps a selection at "
-                    + "\(PosterBoardImports.descriptorLimit) descriptors. Each pack is "
-                    + "copied into this app, so removing one here removes the copy — "
-                    + "the file you imported is untouched.")
+                NativeNote("上游将选择上限设为 "
+                    + "\(PosterBoardImports.descriptorLimit) 个描述符。每个包都会"
+                    + "复制到本应用中，因此在此移除只会移除副本——"
+                    + "你导入的文件不会受影响。")
             }
             // Upstream's `auto_convert_legacy` checkbox, on by default. It gates
             // both the import dialog and the apply-time rewrite, so it belongs
             // here rather than in the apply card: turning it off is how a user
             // says "push what I imported, as it is" for good.
-            Toggle("Convert legacy wallpapers to the modern format",
+            Toggle("将旧版墙纸转换为现代格式",
                    isOn: Binding(get: { PosterBoardPreferences.autoConvertLegacy },
                                  set: { PosterBoardPreferences.autoConvertLegacy = $0 }))
             NativeNote(legacyConvertNote)
@@ -279,18 +279,18 @@ struct PosterBoardView: View {
 
     private var legacyConvertNote: String {
         var lines = [
-            "iOS 27 builds the depth effect only for the modern (“Clownfish”) layout, so a pack "
-                + "made before iOS 27 is rewritten when it is applied — otherwise it installs and "
-                + "looks flat, with no depth. The rewrite re-stamps the family, drops external "
-                + "scripts and republishes the planes, and it is best effort: it can change how a "
-                + "wallpaper looks. A pack holding nothing pre-27 is left alone either way.",
+            "iOS 27 只为现代（“Clownfish”）布局构建景深效果，因此在 iOS 27 之前"
+                + "制作的包会在应用时被重写——否则它会正常安装，"
+                + "但看起来是平的，没有景深。重写会重新标记家族、移除外部"
+                + "脚本并重新发布各个平面，而且它是尽力而为的：可能会改变墙纸的"
+                + "外观。不含 27 之前内容的包在两种情况下都不会被改动。",
         ]
         if let atLeast27 = PosterBoard.compareVersion(identity.version, "27"), atLeast27 < 0 {
-            lines.append("This device is on iOS \(identity.version), which reads a legacy pack as "
-                + "it is, so nothing is converted here and no pack is asked about.")
+            lines.append("此设备运行 iOS \(identity.version)，会按原样读取旧版包，"
+                + "因此这里不会转换任何内容，也不会询问任何包。")
         }
         if !PosterBoardPreferences.autoConvertLegacy {
-            lines.append("Conversion is off, so legacy packs are pushed with their original files.")
+            lines.append("转换已关闭，因此旧版包会连同其原始文件一起推送。")
         }
         return lines.joined(separator: "\n\n")
     }
@@ -328,7 +328,7 @@ struct PosterBoardView: View {
             // (`TendieItem.posterType`); here it is a row control that persists
             // with the pack.
             if !pack.isContainer {
-                Picker("Target extension", selection: Binding(
+                Picker("目标扩展名", selection: Binding(
                     get: { pack.posterType },
                     set: { chosen in
                         guard let index = selection.tendies.firstIndex(where: { $0.id == pack.id })
@@ -348,12 +348,12 @@ struct PosterBoardView: View {
     // MARK: - Video
 
     private var videoSection: some View {
-        Section("Video wallpaper") {
+        Section("视频墙纸") {
             Button {
                 showVideoImporter = true
             } label: {
                 HStack {
-                    Label("Choose video", systemImage: "film")
+                    Label("选择视频", systemImage: "film")
                     if let video = selection.video?.lastPathComponent {
                         Spacer()
                         Text(video).foregroundStyle(.secondary).lineLimit(1)
@@ -365,17 +365,17 @@ struct PosterBoardView: View {
                           allowedContentTypes: [.movie, .video, .quickTimeMovie, .mpeg4Movie]) { result in
                 importMedia(result, into: PosterBoard.videoDirectory) { selection.video = $0 }
             }
-            Toggle("Loop (CoreAnimation frame list)", isOn: $selection.loop)
+            Toggle("循环（CoreAnimation 帧列表）", isOn: $selection.loop)
             if selection.loop {
-                Toggle("Reverse on loop", isOn: $selection.reverse)
-                Toggle("Cover the clock", isOn: $selection.foreground)
+                Toggle("循环时倒放", isOn: $selection.reverse)
+                Toggle("覆盖时钟", isOn: $selection.foreground)
                 calculationModeRow
             } else {
                 Button {
                     showThumbnailImporter = true
                 } label: {
                     HStack {
-                        Label("Choose freeze frame (.heic)", systemImage: "photo")
+                        Label("选择定格画面（.heic）", systemImage: "photo")
                         if let thumbnail = selection.thumbnail?.lastPathComponent {
                             Spacer()
                             Text(thumbnail).foregroundStyle(.secondary).lineLimit(1)
@@ -395,7 +395,7 @@ struct PosterBoardView: View {
                     selection.video = nil
                     selection.thumbnail = nil
                 } label: {
-                    Label("Clear the video choice", systemImage: "xmark.circle")
+                    Label("清除视频选择", systemImage: "xmark.circle")
                 }
             }
             NativeNote(videoNote)
@@ -405,7 +405,7 @@ struct PosterBoardView: View {
     /// Four options in one row is 288 pt of text at the narrowest window width,
     /// so this is a menu: it keeps its value on screen instead of wrapping.
     private var calculationModeRow: some View {
-        Picker("Calculation mode", selection: $selection.calculationMode) {
+        Picker("计算模式", selection: $selection.calculationMode) {
             ForEach(PosterBoardCalculationMode.allCases) { mode in
                 Text(mode.title).tag(mode.rawValue)
             }
@@ -415,21 +415,21 @@ struct PosterBoardView: View {
     private var videoNote: String {
         var lines = [String]()
         if selection.loop {
-            lines.append("Looping decodes the video to JPEG frames and hands PosterBoard a "
-                + "CoreAnimation frame list (up to \(PosterBoardVideo.frameLimit) frames, at the "
-                + "video's own resolution). It is slow, and the frames are written into the "
-                + "backup, so a long clip makes a large one — trim it first.")
-            lines.append("A video that carries a rotation transform is decoded in its stored "
-                + "orientation, which is what the reference's decoder does; such a clip may "
-                + "appear rotated on the Lock Screen.")
+            lines.append("循环会将视频解码为 JPEG 帧，并向海报板提供"
+                + "CoreAnimation 帧列表（最多 \(PosterBoardVideo.frameLimit) 帧，按"
+                + "视频自身分辨率）。这个过程较慢，而且帧会写入"
+                + "备份，因此长片段会产生很大的备份——请先裁剪。")
+            lines.append("带有旋转变换的视频会按存储的方向解码，"
+                + "参考实现的解码器也是如此；此类片段"
+                + "在锁定屏幕上可能显示为旋转状态。")
         } else {
-            lines.append("The live-photo method writes the video into a Photos poster descriptor "
-                + "and needs a freeze frame — the reference raises rather than shipping a "
-                + "descriptor with no thumbnail. The video is rewrapped as .mov unless it "
-                + "already is one.")
+            lines.append("实况照片方式会将视频写入“照片”海报描述符，"
+                + "并且需要定格画面——参考实现会直接报错，而不是交付"
+                + "没有缩略图的描述符。视频会被重新封装为 .mov，除非它"
+                + "本来就是 .mov。")
         }
         if selection.loop && selection.reverse {
-            lines.append("Reverse on loop plays the clip forwards and then backwards.")
+            lines.append("循环时倒放会先正放片段，然后再倒放。")
         }
         return lines.joined(separator: "\n\n")
     }
@@ -437,8 +437,8 @@ struct PosterBoardView: View {
     // MARK: - Reset
 
     private var resetSection: some View {
-        Section("Reset") {
-            Toggle("Full reset — wipe everything and start empty", isOn: $selection.fullReset)
+        Section("重置") {
+            Toggle("完全重置——清空所有内容并从头开始", isOn: $selection.fullReset)
             ForEach(PosterBoardResetMode.allCases) { mode in
                 Toggle(mode.rawValue, isOn: binding(for: mode))
             }
@@ -462,17 +462,17 @@ struct PosterBoardView: View {
 
     private var resetWarning: String {
         if selection.fullReset {
-            return "Full reset: the store's Extensions, GalleryCache and Backups directories are "
-                + "zeroed and replaced with an empty database. Every wallpaper on the device is "
-                + "gone, and the database fetched before this point is stale — the next apply "
-                + "fetches a fresh one."
+            return "完全重置：存储的 Extensions、GalleryCache 和 Backups 目录会被"
+                + "清零并替换为空数据库。设备上的所有墙纸都会"
+                + "消失，而且此前获取的数据库会失效——下次应用会"
+                + "重新获取一个新的。"
         }
         if selection.resetModes.isEmpty { return "" }
         let names = selection.resetModes.map(\.rawValue).sorted().joined(separator: ", ")
-        return "Selected: \(names). A reset is written as a 0-byte file over the folder, which is "
-            + "how the reference clears them; it runs without needing the store database, so it "
-            + "is the recovery path for a store that is already misbehaving. It does not undo "
-            + "anything already applied."
+        return "已选择：\(names)。重置的做法是在文件夹上写入 0 字节文件，"
+            + "参考实现就是这样清除它们的；它无需存储数据库即可运行，因此"
+            + "是已经出现异常的存储的恢复途径。它不会撤销"
+            + "任何已经应用的内容。"
     }
 
     // MARK: - What the one Apply will carry
@@ -497,16 +497,16 @@ struct PosterBoardView: View {
     private var airliftApplySection: some View {
         Section {
             if selection.isActive {
-                Text("Ready: \(selection.describe)").foregroundStyle(.tint)
+                Text("就绪：\(selection.describe)").foregroundStyle(.tint)
             } else {
-                NativeNote("No packs imported yet — import a `.tendies` above to "
-                    + "apply it this way.")
+                NativeNote("尚未导入任何包——请先在上方导入 `.tendies`，"
+                    + "才能以这种方式应用。")
             }
             Button {
                 applyViaAirlift()
             } label: {
                 HStack {
-                    Label("Apply via AirLift", systemImage: "bolt.horizontal.circle")
+                    Label("通过 AirLift 应用", systemImage: "bolt.horizontal.circle")
                     Spacer()
                     if running { ProgressView().controlSize(.small) }
                 }
@@ -515,11 +515,11 @@ struct PosterBoardView: View {
             if !airliftBlocker.isEmpty {
                 NativeSafetyNote(airliftBlocker)
             }
-            NativeNote("Writes the descriptors into \(PosterBoard.domain) over a "
-                + "tunnel and resprings, so it is live in seconds. No backup is taken, because "
-                + "nothing is delivered back to the device — but for the same reason it applies "
-                + "**only** the packs: tweaks need the backup, so they still go through the "
-                + "**Apply** button on the home page.")
+            NativeNote("通过隧道将描述符写入 \(PosterBoard.domain)，并重新载入界面，因此几秒内即可生效。"
+                + "不会创建备份，因为没有任何内容会回传到设备——"
+                + "但同样由于这个原因，它"
+                + "**只**应用墙纸包：调整项需要备份，因此仍需通过"
+                + "主页上的 **应用** 按钮。")
         }
     }
 
@@ -537,26 +537,26 @@ struct PosterBoardView: View {
                 // wallpapers ride that same backup. Saying "fetches the database
                 // first" here would be true of that run, but the database card
                 // above is hidden, so it would read as a reference to nothing.
-                NativeNote("The **Apply** button on the home page delivers the "
-                    + "tweaks, and the wallpapers you picked go with them in one protective "
-                    + "backup — it is a backup-mode run regardless of this page's setting. To "
-                    + "apply the packs alone, with no backup, use **Apply via AirLift** above.")
+                NativeNote("主页上的 **应用** 按钮会应用"
+                    + "调整项，你选择的墙纸也会随它们一起进入一次保护性"
+                    + "备份——无论本页设置如何，它都是备份模式运行。若要"
+                    + "在不备份的情况下单独应用这些包，请使用上方的 **通过 AirLift 应用**。")
             } else if selection.isActive {
-                Text("Ready: \(selection.describe)").foregroundStyle(.tint)
-                NativeNote("Delivered by the **Apply** button on the home page, "
-                    + "together with the tweaks. It fetches the store's database from the "
-                    + "device first, so that run takes one extra exchange. Reboot the device "
-                    + "afterwards — the store is read at boot.")
+                Text("就绪：\(selection.describe)").foregroundStyle(.tint)
+                NativeNote("由主页上的 **应用** 按钮与调整项"
+                    + "一起应用。它会先从设备获取存储的数据库，"
+                    + "因此那次运行会多一次交互。之后请重启设备"
+                    + "——存储会在启动时读取。")
             } else {
-                NativeNote("Nothing selected yet. Whatever is picked here is "
-                    + "delivered by the **Apply** button on the home page, together with the "
-                    + "tweaks — one backup, one restore.")
+                NativeNote("尚未选择任何内容。在此选择的内容会"
+                    + "由主页上的 **应用** 按钮连同调整项一起应用"
+                    + "——一次备份、一次恢复。")
             }
             if applyMode != .airlift {
-                NativeNote("The database itself can be fetched on its own, from the "
-                    + "card above — it is the one stage that can fail on its own terms (the "
-                    + "device decides whether it will upload the container), so being able to "
-                    + "run it, watch it and retry is worth its own button.")
+                NativeNote("数据库本身可以从上方卡片单独获取"
+                    + "——它是唯一可能因自身原因失败的阶段（由设备决定"
+                    + "是否上传容器），因此能够单独运行、观察并重试值得"
+                    + "为它保留一个按钮。")
             }
         }
     }
@@ -564,7 +564,7 @@ struct PosterBoardView: View {
     private var statusText: String { status ?? "" }
 
     private func errorSection(_ message: String) -> some View {
-        Section("Import failed") {
+        Section("导入失败") {
             NativeSafetyNote(message)
         }
     }
@@ -580,7 +580,7 @@ struct PosterBoardView: View {
         let names = (try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? []
         let candidates = names.filter { $0.hasSuffix(".sqlite3") }.sorted()
         guard let name = candidates.last else {
-            databaseSummary = "none yet — an apply that adds a wallpaper fetches one"
+            databaseSummary = "暂无——添加墙纸的应用操作会获取一个"
             return
         }
         let url = directory.appendingPathComponent(name)
@@ -592,7 +592,7 @@ struct PosterBoardView: View {
         }
         let when = DateFormatter.localizedString(from: date, dateStyle: .short, timeStyle: .short)
         databaseSummary = "\(ByteCountFormatter.string(fromByteCount: size, countStyle: .file)), "
-            + "fetched \(when)"
+            + "获取于 \(when)"
     }
 
     private func importPack(_ result: Result<URL, Error>) {
@@ -607,15 +607,15 @@ struct PosterBoardView: View {
                 // code does.
                 guard existing + pack.descriptorCount <= PosterBoardImports.descriptorLimit else {
                     PosterBoardImports.remove(pack)
-                    throw GoldenNuggetError("\(pack.name) carries \(pack.descriptorCount) "
-                        + "descriptor(s), which would take the selection to "
-                        + "\(existing + pack.descriptorCount). PosterBoard's picker gets "
-                        + "unusable past \(PosterBoardImports.descriptorLimit) — remove a pack "
-                        + "first.")
+                    throw GoldenNuggetError("\(pack.name) 包含 \(pack.descriptorCount) "
+                        + "个描述符，会使所选内容达到 "
+                        + "\(existing + pack.descriptorCount) 个。海报板的选择器超过 "
+                        + "\(PosterBoardImports.descriptorLimit) 个后将不可用——请先"
+                        + "移除一个包。")
                 }
                 selection.loadFromDisk()
                 pickError = nil
-                RunLog.shared.append("PosterBoard: imported \(pack.name) (\(pack.summary))")
+                RunLog.shared.append("PosterBoard: 已导入 \(pack.name)（\(pack.summary)）")
                 // The reference asks here, once, before the pack joins the
                 // selection (`add_tendie` → `_ask_legacy_convert`), so the answer
                 // is in place before any apply can read it.
@@ -649,17 +649,17 @@ struct PosterBoardView: View {
         running = true
         runStarted = Date()
         RunLog.shared.clear()
-        status = "Fetching the PosterBoard database…"
+        status = "正在获取海报板数据库…"
         statusTone = .accent
         Task {
             var text = ""
             var tone: GoldenTone = .primary
             do {
                 try await GoldenNuggetEngine.shared.fetchPosterBoardDatabase()
-                text = "Database fetched."
+                text = "数据库已获取。"
                 tone = .success
             } catch let failure as TransportFailure where failure.isCancellation {
-                text = "⏹ stopped by the user (\(failure.label))"
+                text = "⏹ 已被用户停止（\(failure.label)）"
                 tone = .warning
             } catch {
                 text = "❌ \(error.localizedDescription)"
@@ -685,7 +685,7 @@ struct PosterBoardView: View {
         running = true
         runStarted = Date()
         RunLog.shared.clear()
-        status = "Injecting the packs over AirLift…"
+        status = "正在通过 AirLift 注入墙纸包…"
         statusTone = .accent
         Task {
             var text = ""
@@ -693,10 +693,10 @@ struct PosterBoardView: View {
             do {
                 try await GoldenNuggetEngine.shared.applyPosterBoardViaAirlift(
                     selection, deviceVersion: identity.version)
-                text = "Applied over AirLift. The device resprung — no backup was taken."
+                text = "已通过 AirLift 应用。设备已重新载入界面——未创建备份。"
                 tone = .success
             } catch let failure as TransportFailure where failure.isCancellation {
-                text = "⏹ stopped by the user (\(failure.label))"
+                text = "⏹ 已被用户停止（\(failure.label)）"
                 tone = .warning
             } catch {
                 text = "❌ \(error.localizedDescription)"

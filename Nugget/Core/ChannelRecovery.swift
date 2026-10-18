@@ -49,9 +49,9 @@ enum ChannelRecovery {
                     case .cancelled:
                         AppLog.write("\(label) \(reason)")
                     case .handshakeSilent:
-                        AppLog.write("\(label) aborted: \(error.localizedDescription)")
+                        AppLog.write("\(label) 已中止：\(error.localizedDescription)")
                     default:
-                        AppLog.write("\(label) failed (\(reason), not retrying): "
+                        AppLog.write("\(label) 失败（\(reason)，不再重试）："
                             + "\(error.localizedDescription)")
                     }
                     if let diagnostics { AppLog.write(await diagnostics()) }
@@ -59,7 +59,7 @@ enum ChannelRecovery {
 
                 case .retry(let floor, let why):
                     if attempt >= attempts {
-                        AppLog.write("\(label) did not get through in \(attempt) attempts — giving up.")
+                        AppLog.write("\(label) 经 \(attempt) 次尝试仍未成功 —— 放弃。")
                         if let diagnostics { AppLog.write(await diagnostics()) }
                         throw error
                     }
@@ -71,8 +71,8 @@ enum ChannelRecovery {
                     // The failure kind sets the floor; a failure that keeps
                     // recurring still escalates on top of it.
                     let level = min(max(floor.rawValue, attempt), RecoveryLevel.restartMuxer.rawValue)
-                    AppLog.write("\(label) attempt \(attempt)/\(attempts) \(why) "
-                        + "(\(error.localizedDescription)); recovering and retrying in \(delay)s…")
+                    AppLog.write("\(label) 第 \(attempt)/\(attempts) 次尝试 \(why) "
+                        + "（\(error.localizedDescription)）；正在恢复，将在 \(delay)s 后重试…")
                     await recover(level: level)
                     try await Task.sleep(nanoseconds: delay * 1_000_000_000)
                 }
@@ -89,11 +89,11 @@ enum ChannelRecovery {
     /// 3. endpoint pin + muxer plumbing   → `setDeviceEndpointIp` + `core.restart()`
     static func recover(level: Int) async {
         let minimuxer = Minimuxer.shared()
-        AppLog.write("recover(level \(level)): dropping cached RSD tunnel…")
+        AppLog.write("recover(level \(level))：正在丢弃缓存的 RSD 隧道…")
         minimuxer.ideviceGateway?.invalidateConnection()
         guard level > RecoveryLevel.dropRSD.rawValue else { return }
 
-        AppLog.write("recover(level \(level)): re-discovering tunnel endpoint…")
+        AppLog.write("recover(level \(level))：正在重新发现隧道端点…")
         await minimuxer.network.refreshEndpoint()
         guard level > RecoveryLevel.refreshEndpoint.rawValue else { return }
 
@@ -101,7 +101,7 @@ enum ChannelRecovery {
         // cached IP stale, every attempt dies identically no matter how often
         // the adapter is dropped. Pin the LocalDevVPN peer the app probes and
         // rebuild the muxer plumbing on top of it.
-        AppLog.write("recover(level \(level)): pinning endpoint to \(Tunnel.peerIP) and restarting minimuxer…")
+        AppLog.write("recover(level \(level))：正在将端点固定为 \(Tunnel.peerIP) 并重启 minimuxer…")
         minimuxer.gateway.setDeviceEndpointIp(Tunnel.peerIP)
         let stage = StageTimer("recover restart")
         do {
@@ -117,11 +117,11 @@ enum ChannelRecovery {
                 try? await Task.sleep(nanoseconds: 300_000_000)
             }
             stage.done("ready=\(ready)")
-            AppLog.write("recover(level \(level)): minimuxer restarted, endpoint pinned (ready=\(ready))")
+            AppLog.write("recover(level \(level))：minimuxer 已重启，端点已固定（ready=\(ready)）")
         } catch {
-            stage.done("restart failed")
-            AppLog.write("recover(level \(level)): minimuxer restart failed "
-                + "(\(error.localizedDescription)) — continuing anyway")
+            stage.done("重启失败")
+            AppLog.write("recover(level \(level))：minimuxer 重启失败 "
+                + "（\(error.localizedDescription)）—— 仍将继续")
         }
     }
 }

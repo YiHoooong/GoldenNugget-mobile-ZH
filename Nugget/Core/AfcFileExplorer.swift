@@ -85,7 +85,7 @@ enum AfcFileExplorer {
     @discardableResult
     static func pull(_ entry: AfcFsEntry, progress: (@Sendable (Double) -> Void)? = nil) async throws -> URL {
         guard !entry.isDirectory else {
-            throw GoldenNuggetError("Only files can be pulled. \(entry.name) is a folder.")
+            throw GoldenNuggetError("只能拉取文件。\(entry.name) 是文件夹。")
         }
         try FileManager.default.createDirectory(at: downloadsRoot, withIntermediateDirectories: true)
         let existing = Set(try FileManager.default.contentsOfDirectory(atPath: downloadsRoot.path))
@@ -108,7 +108,7 @@ enum AfcFileExplorer {
         progress: (@Sendable (Double) -> Void)? = nil
     ) async throws -> URL {
         guard !entry.isDirectory else {
-            throw GoldenNuggetError("Only files can be previewed. \(entry.name) is a folder.")
+            throw GoldenNuggetError("只能预览文件。\(entry.name) 是文件夹。")
         }
         let destination = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
@@ -148,7 +148,7 @@ enum AfcFileExplorer {
                 }
             }
             if total > 0, written != total {
-                throw GoldenNuggetError("\(entry.name): the device sent \(written) of \(total) byte(s).")
+                throw GoldenNuggetError("\(entry.name)：设备实际发送 \(written) 字节，共 \(total) 字节。")
             }
         } catch {
             try? FileManager.default.removeItem(at: partial)
@@ -168,14 +168,14 @@ enum AfcFileExplorer {
     static func push(_ local: URL, to directory: String) async throws -> AfcFsEntry {
         let size = (try? local.resourceValues(forKeys: [.fileSizeKey]).fileSize).map(Int64.init) ?? 0
         guard size <= pushSizeLimit else {
-            throw GoldenNuggetError("\(local.lastPathComponent) is "
-                + "\(format(size)); AFC writes are capped at \(format(pushSizeLimit)) in one call.")
+            throw GoldenNuggetError("\(local.lastPathComponent) 为 "
+                + "\(format(size))；单次 AFC 写入上限为 \(format(pushSizeLimit))。")
         }
         let data: Data
         do {
             data = try Data(contentsOf: local, options: .mappedIfSafe)
         } catch {
-            throw GoldenNuggetError("Cannot read \(local.lastPathComponent): \(error.localizedDescription)")
+            throw GoldenNuggetError("无法读取 \(local.lastPathComponent)：\(error.localizedDescription)")
         }
         let remote = join(components(of: directory) + [local.lastPathComponent])
         try await gateway().afcWrite(path: remote, data: data)
@@ -185,7 +185,7 @@ enum AfcFileExplorer {
     static func makeDirectory(named name: String, in parent: String) async throws {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, !trimmed.contains("/") else {
-            throw GoldenNuggetError("A folder name cannot be empty or contain a slash.")
+            throw GoldenNuggetError("文件夹名称不能为空，也不能包含斜杠。")
         }
         try await gateway().afcMakeDirectory(path: join(components(of: parent) + [trimmed]))
     }
@@ -193,7 +193,7 @@ enum AfcFileExplorer {
     static func rename(_ entry: AfcFsEntry, to newName: String) async throws {
         let trimmed = newName.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, !trimmed.contains("/") else {
-            throw GoldenNuggetError("A name cannot be empty or contain a slash.")
+            throw GoldenNuggetError("名称不能为空，也不能包含斜杠。")
         }
         guard trimmed != entry.name else { return }
         let parent = parent(of: entry.path)
@@ -209,8 +209,8 @@ enum AfcFileExplorer {
         if entry.isDirectory {
             let children = try await children(of: entry.path)
             guard children.isEmpty else {
-                throw GoldenNuggetError("\(entry.name) is not empty — "
-                    + "\(children.count) item(s) inside. Delete them first.")
+                throw GoldenNuggetError("\(entry.name) 不为空 —— "
+                    + "其中包含 \(children.count) 个项目。请先删除它们。")
             }
         }
         try await gateway().afcDelete(path: entry.path)
@@ -228,7 +228,7 @@ enum AfcFileExplorer {
 
     private static func gateway() async throws -> IdeviceGateway {
         guard let gateway = Minimuxer.shared().ideviceGateway else {
-            throw GoldenNuggetError("AFC: no idevice gateway — is the tunnel up?")
+            throw GoldenNuggetError("AFC：没有 idevice 网关 —— 隧道是否已启动？")
         }
         return gateway
     }

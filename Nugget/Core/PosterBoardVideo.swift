@@ -11,7 +11,7 @@ enum PosterBoardCalculationMode: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    var title: String { self == .linear ? "Linear" : "Discrete" }
+    var title: String { self == .linear ? "线性" : "离散" }
 }
 
 /// A video wallpaper, as the page has assembled it.
@@ -114,7 +114,7 @@ enum PosterBoardVideo {
             ca = background
         }
 
-        log("  → video loop: decoding \(plan.name) into \(ca.lastPathComponent)")
+        log("  → 视频循环：正在将 \(plan.name) 解码到 \(ca.lastPathComponent)")
         try await writeCAML(video: plan.video,
                             caDirectory: ca,
                             calculationMode: plan.calculationMode.rawValue,
@@ -130,7 +130,7 @@ enum PosterBoardVideo {
                                   log: @escaping @Sendable (String) -> Void) async throws {
         let asset = AVURLAsset(url: video)
         guard let track = try await asset.loadTracks(withMediaType: .video).first else {
-            throw GoldenNuggetError("\(video.lastPathComponent) carries no video track.")
+            throw GoldenNuggetError("\(video.lastPathComponent) 不包含视频轨道。")
         }
         // `naturalSize`, **not** the size after `preferredTransform`: the frames
         // below come out of a reader in their stored orientation, and OpenCV's
@@ -141,22 +141,22 @@ enum PosterBoardVideo {
         let width = Int(abs(naturalSize.width.rounded()))
         let height = Int(abs(naturalSize.height.rounded()))
         guard width > 0, height > 0 else {
-            throw GoldenNuggetError("\(video.lastPathComponent) reports a "
-                + "\(width)×\(height) frame — nothing to decode.")
+            throw GoldenNuggetError("\(video.lastPathComponent) 报告 "
+                + "\(width)×\(height) 的帧 —— 无法解码。")
         }
         if transform != .identity {
-            log("  ⚠️ \(video.lastPathComponent) carries a rotation transform; frames are "
-                + "decoded in their stored orientation, exactly as the reference's decoder "
-                + "produces them, so the wallpaper may be rotated on the Lock Screen.")
+            log("  ⚠️ \(video.lastPathComponent) 带有旋转变换；帧将 "
+                + "按存储方向解码，与参考实现的解码器输出完全一致，"
+                + "因此墙纸在锁定屏幕上可能是旋转的。")
         }
 
         let fps = try await framesPerSecond(of: track)
         let seconds = CMTimeGetSeconds(try await asset.load(.duration))
         let estimate = max(1, Int((seconds * fps).rounded()))
         guard estimate <= frameLimit else {
-            throw GoldenNuggetError("\(video.lastPathComponent) is about \(estimate) frames; "
-                + "a CoreAnimation wallpaper is limited to \(frameLimit). Trim the video, or "
-                + "use the live-photo method (turn Looping off).")
+            throw GoldenNuggetError("\(video.lastPathComponent) 约 \(estimate) 帧；"
+                + "CoreAnimation 墙纸上限为 \(frameLimit) 帧。请裁剪视频，或"
+                + "改用实况照片方式（关闭循环）。")
         }
         let duration = Double(estimate) / fps
 
@@ -205,7 +205,7 @@ enum PosterBoardVideo {
             return true
         }
         guard written > 0 else {
-            throw GoldenNuggetError("\(video.lastPathComponent) decoded no frames.")
+            throw GoldenNuggetError("\(video.lastPathComponent) 未解码出任何帧。")
         }
         caml += PosterBoardTemplates.camlFooter()
         try caml.write(to: caDirectory.appendingPathComponent("main.caml"),
@@ -214,10 +214,10 @@ enum PosterBoardVideo {
                                            layerName: layerName)
             .write(to: caDirectory.appendingPathComponent("index.xml"),
                    atomically: true, encoding: .utf8)
-        log("  → \(written) frame(s), \(width)×\(height) frames in a \(docWidth)×\(docHeight) "
-            + "document, layer \(layerName) at scale \(String(format: "%.4f", layerScale)), "
+        log("  → \(written) 帧，\(width)×\(height) 的帧装入 \(docWidth)×\(docHeight) "
+            + "文档，图层 \(layerName) 缩放 \(String(format: "%.4f", layerScale))，"
             + "\(String(format: "%.2f", fps)) fps, "
-            + "duration \(String(format: "%.3f", duration)) s")
+            + "时长 \(String(format: "%.3f", duration)) s")
     }
 
     /// The document size, in points: the device's own screen, which is the one
@@ -233,15 +233,15 @@ enum PosterBoardVideo {
     private static func screenSize(log: @escaping @Sendable (String) -> Void)
         -> (width: Int, height: Int) {
         guard let bounds = activeScreenBounds(), !bounds.isEmpty else {
-            log("  ⚠️ no window scene is reachable; falling back to the reference's "
-                + "390x844 document. The frames will be laid out for a screen this "
-                + "device does not have.")
+            log("  ⚠️ 无法访问窗口场景；回退到参考实现的 "
+                + "390x844 文档。帧将按此设备并不具备的屏幕"
+                + "尺寸布局。")
             return (390, 844)
         }
         let width = max(1, Int(bounds.width.rounded()))
         let height = max(1, Int(bounds.height.rounded()))
-        log("  → document \(width)×\(height) points "
-            + "(the device screen; the reference assumes a 390x844 iPhone)")
+        log("  → 文档 \(width)×\(height) 点 "
+            + "（设备屏幕；参考实现假设为 390x844 的 iPhone）")
         return (width, height)
     }
 
@@ -317,7 +317,7 @@ enum PosterBoardVideo {
         let settling = layerStack.appendingPathComponent("portrait-layer_settling-video.MOV")
         try? FileManager.default.removeItem(at: settling)
         try FileManager.default.copyItem(at: movie, to: settling)
-        log("  → live photo: \(plan.name) → portrait-layer_settling-video.MOV "
+        log("  → 实况照片：\(plan.name) → portrait-layer_settling-video.MOV "
             + "(\(ByteCountFormatter.string(fromByteCount: fileSize(settling), countStyle: .file)))")
 
         // The .aar is a container of exactly two members: the descriptor's
@@ -327,8 +327,8 @@ enum PosterBoardVideo {
                       output: segmentation.appendingPathComponent("segmentation.data.aar"))
 
         guard let thumbnail = plan.thumbnail else {
-            throw GoldenNuggetError("A live-photo wallpaper needs a freeze frame (.heic). "
-                + "Pick one on the Video tab, or turn Looping on.")
+            throw GoldenNuggetError("实况照片墙纸需要一张定格帧（.heic）。"
+                + "请在“视频”标签页选择一张，或开启循环。")
         }
         // The reference writes the picked bytes over all three slots without
         // looking at what they are; the descriptor's assets are HEIC, so the
@@ -365,7 +365,7 @@ enum PosterBoardVideo {
 
         try? FileManager.default.removeItem(at: output)
         guard FileManager.default.createFile(atPath: output.path, contents: nil) else {
-            throw GoldenNuggetError("Could not create \(output.lastPathComponent).")
+            throw GoldenNuggetError("无法创建 \(output.lastPathComponent)。")
         }
         let handle = try FileHandle(forWritingTo: output)
         defer { try? handle.close() }
@@ -437,12 +437,12 @@ enum PosterBoardVideo {
             outputSettings: [kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA])
         output.alwaysCopiesSampleData = false
         guard reader.canAdd(output) else {
-            throw GoldenNuggetError("This video's frames cannot be decoded on this device.")
+            throw GoldenNuggetError("此视频的帧无法在此设备上解码。")
         }
         reader.add(output)
         guard reader.startReading() else {
-            throw GoldenNuggetError("Frame decoding failed: "
-                + (reader.error?.localizedDescription ?? "no reason given"))
+            throw GoldenNuggetError("帧解码失败："
+                + (reader.error?.localizedDescription ?? "未提供原因"))
         }
         while let sample = output.copyNextSampleBuffer() {
             defer { CMSampleBufferInvalidate(sample) }
@@ -454,14 +454,14 @@ enum PosterBoardVideo {
         }
         if reader.status == .reading { reader.cancelReading() }
         if reader.status == .failed {
-            throw GoldenNuggetError("Frame decoding failed: "
-                + (reader.error?.localizedDescription ?? "no reason given"))
+            throw GoldenNuggetError("帧解码失败："
+                + (reader.error?.localizedDescription ?? "未提供原因"))
         }
     }
 
     private static func jpeg(_ image: CGImage) throws -> Data {
         guard let data = UIImage(cgImage: image).jpegData(compressionQuality: jpegQuality) else {
-            throw GoldenNuggetError("A decoded frame could not be encoded as JPEG.")
+            throw GoldenNuggetError("已解码的帧无法编码为 JPEG。")
         }
         return data
     }
@@ -489,12 +489,12 @@ enum PosterBoardVideo {
         let asset = AVURLAsset(url: video)
         guard let session = AVAssetExportSession(asset: asset,
                                                  presetName: AVAssetExportPresetPassthrough) else {
-            throw GoldenNuggetError("\(video.lastPathComponent) cannot be rewrapped as a .mov.")
+            throw GoldenNuggetError("\(video.lastPathComponent) 无法重新封装为 .mov。")
         }
         do {
             try await session.export(to: output, as: .mov)
         } catch {
-            throw GoldenNuggetError("Could not rewrap \(video.lastPathComponent) as a .mov: "
+            throw GoldenNuggetError("无法将 \(video.lastPathComponent) 重新封装为 .mov："
                 + error.localizedDescription)
         }
         return output

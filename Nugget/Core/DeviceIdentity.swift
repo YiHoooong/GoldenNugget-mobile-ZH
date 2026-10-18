@@ -21,7 +21,7 @@ struct DeviceIdentity: Equatable, Sendable {
     var isIPhone: Bool { productType.hasPrefix("iPhone") }
 
     var describe: String {
-        if productType.isEmpty && version.isEmpty { return "unknown device" }
+        if productType.isEmpty && version.isEmpty { return "未知设备" }
         if productType.isEmpty { return "iOS \(version)" }
         if version.isEmpty { return productType }
         return "\(productType) / iOS \(version)"

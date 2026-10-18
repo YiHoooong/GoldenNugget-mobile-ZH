@@ -77,7 +77,7 @@ enum BackupBaseline {
 
         var describe: String {
             let age = Int(Date().timeIntervalSince(committedAt) / 86_400)
-            return "iOS \(productVersion), keep-set \(keepSetHash), \(age) day(s) old"
+            return "iOS \(productVersion)，保留集 \(keepSetHash)，已 \(age) 天"
         }
     }
 
@@ -96,7 +96,7 @@ enum BackupBaseline {
         var reason: String {
             switch self {
             case .full(let reason): return reason
-            case .seeded(let record): return "seeded from the retained pull (\(record.describe))"
+            case .seeded(let record): return "使用保留的拉取结果（\(record.describe)）"
             }
         }
     }
@@ -112,33 +112,33 @@ enum BackupBaseline {
                      productVersion: String,
                      enabled: Bool) -> Plan {
         guard enabled else {
-            return .full(reason: "the incremental pull switch is off (Dev.IncrementalPull)")
+            return .full(reason: "增量拉取开关已关闭（Dev.IncrementalPull）")
         }
         guard let record = record(udid: udid) else {
-            return .full(reason: "no baseline recorded yet — the first run after switching this "
-                + "on is a full pull, and the next one can be incremental")
+            return .full(reason: "尚无基线记录 —— 开启此功能后的首次运行会执行完整拉取，"
+                + "之后便可用增量拉取")
         }
         guard let retained = manifestURL(udid: udid), FileManager.default.fileExists(atPath: retained.path)
         else {
-            return .full(reason: "the record survived but its Manifest.db did not")
+            return .full(reason: "记录还在，但其 Manifest.db 已丢失")
         }
         guard record.udid == udid else {
-            return .full(reason: "the baseline belongs to \(record.udid), not \(udid)")
+            return .full(reason: "该基线属于 \(record.udid)，而不是 \(udid)")
         }
         guard record.productVersion == productVersion else {
-            return .full(reason: "the device changed since the baseline was taken "
-                + "(was iOS \(record.productVersion), now iOS \(productVersion))")
+            return .full(reason: "自采集基线以来设备已变化 "
+                + "（原为 iOS \(record.productVersion)，现为 iOS \(productVersion)）")
         }
         let hash = ProtectiveBackup.keepSetHash
         guard record.keepSetHash == hash else {
-            return .full(reason: "the protective keep-set changed (\(record.keepSetHash) → \(hash)): "
-                + "a file it now names was drained and never stored, so a seeded manifest would "
-                + "tell the device not to send it")
+            return .full(reason: "保护性保留集已变化（\(record.keepSetHash) → \(hash)）："
+                + "其中新纳入的文件曾被排空且从未保存，因此播种的清单会"
+                + "告诉设备不要发送它")
         }
         let age = Date().timeIntervalSince(record.committedAt)
         guard age < Double(maxAgeDays) * 86_400 else {
-            return .full(reason: "the baseline is \(Int(age / 86_400)) day(s) old "
-                + "(limit \(maxAgeDays))")
+            return .full(reason: "基线已存在 \(Int(age / 86_400)) 天 "
+                + "（上限 \(maxAgeDays) 天）")
         }
         return .seeded(record)
     }
@@ -180,22 +180,22 @@ enum BackupBaseline {
             try fm.copyItem(atPath: retained.path, toPath: working)
             if let dropDomain {
                 let dropped = ManifestStore(deviceDir: deviceDir).dropRows(domain: dropDomain)
-                AppLog.write("baseline: dropped \(dropped) row(s) of \(dropDomain) from the seeded "
-                    + "manifest, so the device uploads that container again")
+                AppLog.write("baseline: 已从播种的清单中丢弃 \(dropped) 行 \(dropDomain)，"
+                    + "设备会重新上传该容器")
             }
             // A seeded database that cannot be read is worse than none: the
             // device would abandon the exchange ("Failed to send file
             // Manifest.db: not found (-6)" is what a missing one produced).
             guard ManifestStore(deviceDir: deviceDir).rowCount() > 0 else {
-                AppLog.write("baseline: the retained Manifest.db has no rows — falling back to "
-                    + "the empty manifest, which means a full pull")
+                AppLog.write("baseline: 保留的 Manifest.db 没有任何行 —— 回退到 "
+                    + "空清单，即执行完整拉取")
                 try? fm.removeItem(atPath: working)
                 return false
             }
             return true
         } catch {
-            AppLog.write("baseline: could not seed \(working) "
-                + "(\(error.localizedDescription)) — falling back to the empty manifest")
+            AppLog.write("baseline: 无法播种 \(working) "
+                + "（\(error.localizedDescription)）—— 回退到空清单")
             return false
         }
     }
@@ -212,12 +212,12 @@ enum BackupBaseline {
     static func snapshot(deviceDir: URL, udid: String) -> String {
         let store = ManifestStore(deviceDir: deviceDir)
         guard store.exists else {
-            return "not saved — the exchange left no Manifest.db to retain"
+            return "未保存 —— 本次交换没有留下可保留的 Manifest.db"
         }
         let rows = store.rowCount()
         guard rows > 0 else {
-            return "not saved — the device did not upload its own Manifest.db (0 rows), so there "
-                + "is nothing to diff against next time"
+            return "未保存 —— 设备未上传它自己的 Manifest.db（0 行），因此"
+                + "下次没有可对比的内容"
         }
         let fm = FileManager.default
         let target = AppPaths.baselineDir(udid: udid).appendingPathComponent("Manifest.db")
@@ -234,11 +234,11 @@ enum BackupBaseline {
             if fm.fileExists(atPath: target.path) { try fm.removeItem(atPath: target.path) }
             try fm.moveItem(atPath: staging.path, toPath: target.path)
             let bytes = (try? fm.attributesOfItem(atPath: target.path)[.size] as? NSNumber)??.int64Value
-            return "saved \(rows) row(s), "
+            return "已保存 \(rows) 行，"
                 + ByteCountFormatter.string(fromByteCount: bytes ?? 0, countStyle: .file)
-                + " — the next run can be a delta if this one reaches its restore"
+                + " —— 如果本次运行完成到恢复阶段，下次就可以只传增量"
         } catch {
-            return "not saved — \(error.localizedDescription)"
+            return "未保存 —— \(error.localizedDescription)"
         }
     }
 
@@ -262,11 +262,11 @@ enum BackupBaseline {
             let data = try JSONEncoder().encode(record)
             let url = AppPaths.baselineDir(udid: udid).appendingPathComponent("baseline.json")
             try data.write(to: url, options: .atomic)
-            AppLog.write("baseline: committed — \(record.describe). The next iOS 27 apply on this "
-                + "device will ask for a delta instead of the whole device walk.")
+            AppLog.write("baseline: 已提交 —— \(record.describe)。此设备下次在 iOS 27 上应用时"
+                + "将请求增量，而不是遍历整个设备。")
         } catch {
-            AppLog.write("baseline: could not write the record "
-                + "(\(error.localizedDescription)) — the retained manifest stays unused")
+            AppLog.write("baseline: 无法写入记录 "
+                + "（\(error.localizedDescription)）—— 保留的清单将不会被使用")
         }
     }
 
@@ -276,7 +276,7 @@ enum BackupBaseline {
         let dir = AppPaths.baselineDir(udid: udid)
         guard FileManager.default.fileExists(atPath: dir.path) else { return }
         try? FileManager.default.removeItem(at: dir)
-        AppLog.write("baseline: cleared (\(reason))")
+        AppLog.write("baseline: 已清除（\(reason)）")
     }
 
     /// `Manifest.db` should not be half a directory away from its record.

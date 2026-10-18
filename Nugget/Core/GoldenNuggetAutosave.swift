@@ -31,7 +31,7 @@ enum GoldenNuggetAutosave {
     /// spaces, `_` and `-`).
     static let presetName = "AutoSave"
     /// `_save_autosave_preset`'s description argument, verbatim.
-    static let description = "Automatic save of last tweak configuration"
+    static let description = "自动保存上次的调整项配置"
     /// `_save_autosave_preset`'s `tags` argument, verbatim.
     static let tags = ["auto"]
     /// `PRESET_VERSION` (`preset_manager.py:23`).

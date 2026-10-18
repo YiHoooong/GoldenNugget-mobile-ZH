@@ -465,18 +465,18 @@ enum StatusBarArchive {
     /// dropped rather than report success as though everything landed.
     static func droppedFields(_ overrides: StatusBarOverrides) -> [String] {
         var dropped: [String] = []
-        if overrides.timeText.set { dropped.append("time") }
-        if overrides.dateText.set { dropped.append("date") }
-        if overrides.breadcrumb.set { dropped.append("breadcrumb") }
-        if overrides.batteryDetail.set { dropped.append("battery detail") }
-        if overrides.batteryCapacity.set { dropped.append("battery capacity") }
-        if overrides.wifiBars.set { dropped.append("wifi bars") }
-        if overrides.rawSignalShown { dropped.append("raw signal") }
-        if overrides.dataNetworkType.set { dropped.append("data network type") }
-        if overrides.secondaryDataNetworkType.set { dropped.append("secondary data network type") }
-        if overrides.cellularServiceShown.set { dropped.append("cellular service") }
-        if overrides.secondaryCellularConfigured.set { dropped.append("secondary cellular") }
-        if !overrides.itemShown.isEmpty { dropped.append("item toggles") }
+        if overrides.timeText.set { dropped.append("时间") }
+        if overrides.dateText.set { dropped.append("日期") }
+        if overrides.breadcrumb.set { dropped.append("返回链接") }
+        if overrides.batteryDetail.set { dropped.append("电池详情") }
+        if overrides.batteryCapacity.set { dropped.append("电池容量") }
+        if overrides.wifiBars.set { dropped.append("Wi-Fi 信号格") }
+        if overrides.rawSignalShown { dropped.append("原始信号") }
+        if overrides.dataNetworkType.set { dropped.append("数据网络类型") }
+        if overrides.secondaryDataNetworkType.set { dropped.append("副数据网络类型") }
+        if overrides.cellularServiceShown.set { dropped.append("蜂窝服务") }
+        if overrides.secondaryCellularConfigured.set { dropped.append("副蜂窝网络") }
+        if !overrides.itemShown.isEmpty { dropped.append("项目开关") }
         return dropped
     }
 }
@@ -487,7 +487,7 @@ enum StatusBarArchiveError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .notAnArchive:
-            return "That payload is not a usable status bar override archive."
+            return "该载荷不是可用的状态栏覆盖归档。"
         }
     }
 }

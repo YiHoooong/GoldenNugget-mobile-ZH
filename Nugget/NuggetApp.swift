@@ -18,9 +18,9 @@ struct GoldenNuggetApp: App {
         // call returns "already subscribed" and logs nothing — so it belongs
         // where it can only happen once.
         if Airlift.install() {
-            AppLog.write("AirLift: log sink installed (AirTraffic escape available on iOS 27+)")
+            AppLog.write("AirLift：日志接收器已安装（iOS 27+ 可用 AirTraffic 逃逸）")
         } else {
-            AppLog.write("AirLift: log sink already installed by the library")
+            AppLog.write("AirLift：库已安装日志接收器")
         }
         // Referenced so the linker keeps `_ALGetGrappaToken`: the FFI looks it
         // up with `dlsym(RTLD_DEFAULT, …)` when it writes, and an unreferenced
@@ -35,7 +35,7 @@ struct GoldenNuggetApp: App {
         // Goes through the app log rather than print(): on device the console is
         // not reachable, and the tunnel verdict is the first thing a failed run
         // needs to show in goldennugget.log.
-        AppLog.write("Tunnel status: \(Tunnel.describe()) — em_proxy \(tunnelUp ? "skipped (LocalDevVPN active)" : "starting")")
+        AppLog.write("隧道状态：\(Tunnel.describe()) — em_proxy \(tunnelUp ? "已跳过（LocalDevVPN 已启用）" : "正在启动")")
         if !tunnelUp {
             let emproxy = Minimuxer.shared().emproxy
             emproxy.setHandshakeClient(host: "127.0.0.1", port: 51820, enabled: false)
@@ -43,7 +43,7 @@ struct GoldenNuggetApp: App {
                 do {
                     try await emproxy.start(host: "127.0.0.1", port: 51820)
                 } catch {
-                    AppLog.write("em_proxy failed to start: \(error)")
+                    AppLog.write("em_proxy 启动失败：\(error)")
                 }
             }
         }

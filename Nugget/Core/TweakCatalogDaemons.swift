@@ -32,8 +32,8 @@ struct DaemonGroup: Sendable {
 
 /// The two groups of switches on the Daemons page, in the reference's order.
 enum DaemonSection: String, CaseIterable, Identifiable, Sendable {
-    case disable = "Daemons to Disable"
-    case analytics = "Analytics, Data Tracking & Logging"
+    case disable = "要禁用的守护进程"
+    case analytics = "分析、数据追踪与日志"
     var id: String { rawValue }
 }
 
@@ -41,7 +41,7 @@ enum DaemonGroups {
     static let all: [DaemonGroup] = [
         DaemonGroup(
             name: "thermalmonitord",
-            title: "Disable thermalmonitord",
+            title: "禁用温控",
             labels: ["com.apple.thermalmonitord"],
             section: .disable,
             isRecommended: false,
@@ -49,7 +49,7 @@ enum DaemonGroups {
         ),
         DaemonGroup(
             name: "OTA",
-            title: "Disable OTA",
+            title: "禁用 OTA",
             labels: ["com.apple.mobile.softwareupdated", "com.apple.OTATaskingAgent", "com.apple.softwareupdateservicesd", "com.apple.mobile.NRDUpdated"],
             section: .disable,
             isRecommended: false,
@@ -57,7 +57,7 @@ enum DaemonGroups {
         ),
         DaemonGroup(
             name: "UsageTrackingAgent",
-            title: "Disable UsageTrackingAgent",
+            title: "禁用用量追踪助手",
             labels: ["com.apple.UsageTrackingAgent"],
             section: .disable,
             isRecommended: true,
@@ -65,7 +65,7 @@ enum DaemonGroups {
         ),
         DaemonGroup(
             name: "GameCenter",
-            title: "Disable Game Center",
+            title: "禁用 Game Center",
             labels: ["com.apple.gamed"],
             section: .disable,
             isRecommended: false,
@@ -73,7 +73,7 @@ enum DaemonGroups {
         ),
         DaemonGroup(
             name: "ATWAKEUP",
-            title: "Disable ATWAKEUP",
+            title: "禁用 ATWAKEUP",
             labels: ["com.apple.atc.atwakeup"],
             section: .disable,
             isRecommended: false,
@@ -81,7 +81,7 @@ enum DaemonGroups {
         ),
         DaemonGroup(
             name: "Tips",
-            title: "Disable Tips Services",
+            title: "禁用“提示”服务",
             labels: ["com.apple.tipsd"],
             section: .disable,
             isRecommended: false,
@@ -89,7 +89,7 @@ enum DaemonGroups {
         ),
         DaemonGroup(
             name: "VPN",
-            title: "VPN Icon",
+            title: "VPN 图标",
             labels: ["com.apple.racoon"],
             section: .disable,
             isRecommended: false,
@@ -97,7 +97,7 @@ enum DaemonGroups {
         ),
         DaemonGroup(
             name: "ChineseLAN",
-            title: "Disable Chinese WLAN Service",
+            title: "禁用中国 WLAN 服务",
             labels: ["com.apple.wapic", "com.apple.wifi.wapic"],
             section: .disable,
             isRecommended: false,
@@ -105,7 +105,7 @@ enum DaemonGroups {
         ),
         DaemonGroup(
             name: "HealthKit",
-            title: "Disable HealthKit",
+            title: "禁用 HealthKit",
             labels: ["com.apple.healthd"],
             section: .disable,
             isRecommended: false,
@@ -113,7 +113,7 @@ enum DaemonGroups {
         ),
         DaemonGroup(
             name: "AirPrint",
-            title: "Disable AirPrint",
+            title: "禁用“隔空打印”(AirPrint)",
             labels: ["com.apple.printd"],
             section: .disable,
             isRecommended: false,
@@ -121,7 +121,7 @@ enum DaemonGroups {
         ),
         DaemonGroup(
             name: "AssistiveTouch",
-            title: "Disable Assistive Touch",
+            title: "禁用辅助触控",
             labels: ["com.apple.assistivetouchd"],
             section: .disable,
             isRecommended: false,
@@ -129,7 +129,7 @@ enum DaemonGroups {
         ),
         DaemonGroup(
             name: "iCloud",
-            title: "Disable iCloud",
+            title: "禁用 iCloud",
             labels: ["com.apple.itunescloudd"],
             section: .disable,
             isRecommended: false,
@@ -137,7 +137,7 @@ enum DaemonGroups {
         ),
         DaemonGroup(
             name: "InternetTethering",
-            title: "Disable Internet Tethering (Hotspot)",
+            title: "禁用 Internet 网络共享（个人热点）",
             labels: ["com.apple.MobileInternetSharing"],
             section: .disable,
             isRecommended: false,
@@ -145,7 +145,7 @@ enum DaemonGroups {
         ),
         DaemonGroup(
             name: "PassBook",
-            title: "Disable Passbook",
+            title: "禁用 Passbook（即“钱包”）",
             labels: ["com.apple.passd"],
             section: .disable,
             isRecommended: false,
@@ -153,7 +153,7 @@ enum DaemonGroups {
         ),
         DaemonGroup(
             name: "Spotlight",
-            title: "Disable Spotlight",
+            title: "禁用“聚焦”(Spotlight)",
             labels: ["com.apple.searchd", "com.apple.corespotlightservice", "com.apple.spotlightknowledged", "com.apple.spotlightknowledged.updater", "com.apple.spotlight.IndexAgent"],
             section: .disable,
             isRecommended: false,
@@ -161,7 +161,7 @@ enum DaemonGroups {
         ),
         DaemonGroup(
             name: "NanoTimeKit",
-            title: "Disable NanoTimeKit (Apple Watch Face Sync)",
+            title: "禁用 NanoTimeKit（Apple Watch 表盘同步）",
             labels: ["com.apple.nanotimekitcompaniond"],
             section: .disable,
             isRecommended: false,
@@ -169,7 +169,7 @@ enum DaemonGroups {
         ),
         DaemonGroup(
             name: "VoiceControl",
-            title: "Disable Voice Control",
+            title: "禁用语音控制",
             labels: ["com.apple.assistant_service", "com.apple.assistantd", "com.apple.voiced"],
             section: .disable,
             isRecommended: false,
@@ -177,7 +177,7 @@ enum DaemonGroups {
         ),
         DaemonGroup(
             name: "FollowUp",
-            title: "Follow Up",
+            title: "后续活动",
             labels: ["com.apple.followupd"],
             section: .disable,
             isRecommended: true,
@@ -185,7 +185,7 @@ enum DaemonGroups {
         ),
         DaemonGroup(
             name: "Location",
-            title: "Location Services",
+            title: "定位服务",
             labels: ["com.apple.locationd"],
             section: .disable,
             isRecommended: false,
@@ -193,7 +193,7 @@ enum DaemonGroups {
         ),
         DaemonGroup(
             name: "WifiAnalytics",
-            title: "Disable Wi-Fi Analytics",
+            title: "禁用 Wi-Fi 分析",
             labels: ["com.apple.wifianalyticsd"],
             section: .analytics,
             isRecommended: true,
@@ -201,7 +201,7 @@ enum DaemonGroups {
         ),
         DaemonGroup(
             name: "AnalyticsHelper",
-            title: "Disable System Analytics",
+            title: "禁用系统分析",
             labels: ["com.apple.analyticsd", "com.apple.analyticsd.admin", "com.apple.analyticsd.events"],
             section: .analytics,
             isRecommended: true,
@@ -209,7 +209,7 @@ enum DaemonGroups {
         ),
         DaemonGroup(
             name: "CallAnalytics",
-            title: "Disable Call Analytics (RTC Reporting)",
+            title: "禁用通话分析（RTC 报告）",
             labels: ["com.apple.rtcreportingd"],
             section: .analytics,
             isRecommended: true,
@@ -217,7 +217,7 @@ enum DaemonGroups {
         ),
         DaemonGroup(
             name: "CoreDuet",
-            title: "Disable CoreDuet (Battery/Usage Statistics)",
+            title: "禁用 CoreDuet（电池/用量统计）",
             labels: ["com.apple.coreduetd"],
             section: .analytics,
             isRecommended: true,
@@ -225,7 +225,7 @@ enum DaemonGroups {
         ),
         DaemonGroup(
             name: "Insight",
-            title: "Disable Insight",
+            title: "禁用 Insight",
             labels: ["com.apple.insightd"],
             section: .analytics,
             isRecommended: true,
@@ -233,7 +233,7 @@ enum DaemonGroups {
         ),
         DaemonGroup(
             name: "Metrics",
-            title: "Disable Metrics",
+            title: "禁用 Metrics",
             labels: ["com.apple.metricsd"],
             section: .analytics,
             isRecommended: true,
@@ -241,7 +241,7 @@ enum DaemonGroups {
         ),
         DaemonGroup(
             name: "MediaExperience",
-            title: "Disable Media Experience Analytics",
+            title: "禁用媒体体验分析",
             labels: ["com.apple.mediaremoted"],
             section: .analytics,
             isRecommended: true,
@@ -249,7 +249,7 @@ enum DaemonGroups {
         ),
         DaemonGroup(
             name: "Symptomsd",
-            title: "Disable Symptom Diagnostics",
+            title: "禁用症状诊断",
             labels: ["com.apple.symptomsd", "com.apple.symptomsd-app"],
             section: .analytics,
             isRecommended: true,
@@ -257,7 +257,7 @@ enum DaemonGroups {
         ),
         DaemonGroup(
             name: "StatisticalDiagnostic",
-            title: "Disable Statistical Diagnostics",
+            title: "禁用统计诊断",
             labels: ["com.apple.StatisticalDiagnosticService"],
             section: .analytics,
             isRecommended: true,
@@ -265,7 +265,7 @@ enum DaemonGroups {
         ),
         DaemonGroup(
             name: "WirelessDiagnostics",
-            title: "Disable Wireless Diagnostics",
+            title: "禁用无线诊断",
             labels: ["com.apple.wirelessdiagnostics"],
             section: .analytics,
             isRecommended: true,
@@ -273,7 +273,7 @@ enum DaemonGroups {
         ),
         DaemonGroup(
             name: "DuetHeuristic",
-            title: "Disable Duet Heuristic",
+            title: "禁用 Duet 启发式",
             labels: ["com.apple.DuetHeuristic-BM", "com.apple.DuetHeuristic-BM.Baseband"],
             section: .analytics,
             isRecommended: true,
@@ -281,7 +281,7 @@ enum DaemonGroups {
         ),
         DaemonGroup(
             name: "DuetExpert",
-            title: "Disable Duet Expert",
+            title: "禁用 Duet 专家",
             labels: ["com.apple.duetexpertd"],
             section: .analytics,
             isRecommended: true,
@@ -289,7 +289,7 @@ enum DaemonGroups {
         ),
         DaemonGroup(
             name: "Decisiond",
-            title: "Disable Decisiond",
+            title: "禁用 Decisiond",
             labels: ["com.apple.decisiond"],
             section: .analytics,
             isRecommended: true,
@@ -297,7 +297,7 @@ enum DaemonGroups {
         ),
         DaemonGroup(
             name: "Triald",
-            title: "Disable Triald (A/B Experiment Telemetry)",
+            title: "禁用 Triald（A/B 实验遥测）",
             labels: ["com.apple.triald"],
             section: .analytics,
             isRecommended: true,
@@ -305,7 +305,7 @@ enum DaemonGroups {
         ),
         DaemonGroup(
             name: "Sociald",
-            title: "Disable Sociald",
+            title: "禁用 Sociald",
             labels: ["com.apple.sociald"],
             section: .analytics,
             isRecommended: true,
@@ -313,7 +313,7 @@ enum DaemonGroups {
         ),
         DaemonGroup(
             name: "AppleAds",
-            title: "AppleAds",
+            title: "Apple 广告",
             labels: ["com.apple.promotedcontentd", "com.apple.adprivacyd", "com.apple.adservicesd"],
             section: .analytics,
             isRecommended: true,
@@ -321,7 +321,7 @@ enum DaemonGroups {
         ),
         DaemonGroup(
             name: "CrashReports",
-            title: "CrashReports",
+            title: "崩溃报告",
             labels: ["com.apple.ReportCrash", "com.apple.ReportCrash.Jetsam", "com.apple.ReportMemoryException", "com.apple.OTACrashCopier", "com.apple.analyticsd", "com.apple.wifianalyticsd", "com.apple.aslmanager", "com.apple.coresymbolicationd", "com.apple.crash_mover", "com.apple.crashreportcopymobile", "com.apple.DumpBasebandCrash", "com.apple.DumpPanic", "com.apple.logd", "com.apple.logd.admin", "com.apple.logd.events", "com.apple.logd.watchdog", "com.apple.logd_helper", "com.apple.logd_reporter", "com.apple.logd_reporter.report_statistics", "com.apple.system.logger", "com.apple.hangreporter", "com.apple.hangtracerd", "com.apple.spindump", "com.apple.tailspind", "com.apple.rtcreportingd", "com.apple.syslogd", "com.apple.signpost.signpost_reporter", "com.apple.pluginkit.pkreporter", "com.apple.ProxiedCrashCopier", "com.apple.ProxiedCrashCopier.ProxyingDevice", "com.apple.ReportSystemMemory"],
             section: .analytics,
             isRecommended: true,
@@ -329,7 +329,7 @@ enum DaemonGroups {
         ),
         DaemonGroup(
             name: "Diagnostics",
-            title: "Diagnostics",
+            title: "诊断",
             labels: ["com.apple.diagnosticd", "com.apple.diagnosticextensionsd", "com.apple.diagnosticservicesd", "com.apple.diagnosticspushd", "com.apple.symptomsd-diag", "com.apple.sysdiagnose", "com.apple.sysdiagnose.darwinos", "com.apple.sysdiagnose_helper"],
             section: .analytics,
             isRecommended: true,
@@ -337,7 +337,7 @@ enum DaemonGroups {
         ),
         DaemonGroup(
             name: "Feedback",
-            title: "Feedback",
+            title: "反馈",
             labels: ["com.apple.feedbackd"],
             section: .analytics,
             isRecommended: true,
@@ -345,7 +345,7 @@ enum DaemonGroups {
         ),
         DaemonGroup(
             name: "SettingsStats",
-            title: "SettingsStats",
+            title: "设置统计",
             labels: ["com.apple.settings-statsd"],
             section: .analytics,
             isRecommended: true,
@@ -476,7 +476,7 @@ enum DaemonGroups {
     /// 0-byte file written over the plist rather than a serialised dict.
     static let screenTime = DaemonNullify(
         id: "ClearScreenTimeAgentPlist",
-        title: "Disable Screen Time Agent",
+        title: "禁用屏幕时间助手",
         path: "/var/mobile/Library/Preferences/com.apple.ScreenTimeAgent.plist"
     )
 }
@@ -512,8 +512,8 @@ extension TweakCatalog {
             iphoneOnly: false,
             ipadOnly: false,
             disabled: false,
-            detail: "Disables \(group.labels.count) launchd "
-                + "\(group.labels.count == 1 ? "daemon" : "daemons"): "
+            detail: "禁用 \(group.labels.count) 个 launchd "
+                + "\(group.labels.count == 1 ? "daemon" : "daemons")，即以下守护进程："
                 + group.labels.joined(separator: ", ") + ".",
             multiValues: Dictionary(
                 uniqueKeysWithValues: group.labels.map { ($0, TweakValue.bool(false)) }
@@ -539,7 +539,7 @@ extension TweakCatalog {
         iphoneOnly: false,
         ipadOnly: false,
         disabled: false,
-        detail: "Writes a 0-byte file over "
+        detail: "将一个 0 字节文件覆盖写入 "
             + "\(DaemonGroups.screenTime.path).",
         multiValues: nil
     )

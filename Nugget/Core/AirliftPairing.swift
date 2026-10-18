@@ -119,7 +119,7 @@ enum AirliftPairing {
         defer { al_pairing_result_free(&out) }
 
         if rc != 0 {
-            let message = out.error.map { String(cString: $0) } ?? "pairing failed (code \(rc))"
+            let message = out.error.map { String(cString: $0) } ?? "配对失败（代码 \(rc)）"
             throw Failure.runFailed(message)
         }
 

@@ -52,17 +52,17 @@ enum AppDestination: String, CaseIterable, Identifiable, Hashable {
     var title: String {
         switch self {
         case .home: "GoldenNugget"
-        case .tweaks: "Tweaks"
-        case .presets: "Presets"
-        case .posterBoard: "PosterBoard"
-        case .wallpaperDownloads: "Download Wallpapers"
-        case .statusBar: "Status Bar"
-        case .wallet: "Wallet"
-        case .passcode: "Passcode"
-        case .daemons: "Daemons"
-        case .media: "Media"
-        case .files: "Files"
-        case .settings: "Settings"
+        case .tweaks: "调整项"
+        case .presets: "预设"
+        case .posterBoard: "海报板"
+        case .wallpaperDownloads: "下载墙纸"
+        case .statusBar: "状态栏"
+        case .wallet: "钱包"
+        case .passcode: "密码"
+        case .daemons: "守护进程"
+        case .media: "媒体"
+        case .files: "文件"
+        case .settings: "设置"
         }
     }
 
@@ -229,7 +229,7 @@ struct RootView: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .confirmationAction) {
-                        Button("Close") { menuPresented = false }
+                        Button("关闭") { menuPresented = false }
                     }
                 }
             }
@@ -346,7 +346,7 @@ struct GoldenSidebarButton: ViewModifier {
                     Button(action: showSidebar) {
                         Image(systemName: "line.3.horizontal")
                     }
-                    .accessibilityLabel("Menu")
+                    .accessibilityLabel("菜单")
                 }
             }
         } else {
